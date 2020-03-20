@@ -205,7 +205,7 @@ var investor = setInterval(function() {
 		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
 		if (highPriorityActiveProject == true)
 		{
-			if ( projectBuy.priority != 1)
+			if ( projectBuy.priority !== 1)
 			{
 				println("[INVESTOR] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
 				continue;
@@ -659,15 +659,18 @@ var droneManager = setInterval(function() {
 	{
 		//println("[INVESTOR] projectBuy: " +  prj.title);
 		// if we're not in the list of pre-approved projects, let's skip
-		if (stage2ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1)
+		if (stage2ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1 && (stage2ProjectEndList.indexOf(projectBuy.id) === -1) )
+		{
+			println("[DRONE] projectBuy " +  projectBuy.title + " is not in our pre-approved list, skipping" + " / " + projectBuy.id);
 			continue;
+		}
 
 		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
 		if (highPriorityActiveProject == true)
 		{
-			if ( projectBuy.priority != 1)
+			if ( projectBuy.priority !== 1)
 			{
-				println("[INVESTOR] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
+				println("[DRONE] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
 				continue;
 			}
 		}
@@ -677,6 +680,7 @@ var droneManager = setInterval(function() {
 		if (stage2ProjectEndList.indexOf(projectBuy.id) !== -1)
 		{
 			// .. and we can afford it, let's clear this stage and move on. 
+			println("[DRONE] Trying to buy project " +  projectBuy.title + " " + " / " + projectBuy.id);
 			if ( projectBuy.cost() )
 			{
 				cfg_disableDroneManager = true;
@@ -684,45 +688,28 @@ var droneManager = setInterval(function() {
 				cfg_disableProbesManager = false;
 				clearInterval(droneManager);
 				clearStage2Graphs();
-
 				initGraphs(3).then(result => stage2Graphs()).then(resolve=>loadStage2Graphs());
+
+				println("[DRONE] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
+				projectBuy.effect();
+	
 				return;			
 			}
 		}
 
 		if ( projectBuy.cost() )
 		{
-			println("[INVESTOR] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
+			println("[DRONE] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
 			projectBuy.effect();
 			break; // FIXME: multiple of these running in a row and the cost() fails to restrict it from buying. Probably another function call to recalculate missing.
 		}
 		else
 		{
-			println("[INVESTOR] projectBuy - can't afford " +  projectBuy.title + " / " + projectBuy.id)
+			println("[DRONE] projectBuy - can't afford " +  projectBuy.title + " / " + projectBuy.id)
 		}		
 	}
 
 	/*
-	for (let projectBuy of stage2ProjectBuyList)
-	{
-		if (typeof document.getElementById(projectBuy) !== "undefined" && document.getElementById(projectBuy) !== null)
-		{
-			projectObj = document.getElementById(projectBuy);		
-
-			if (projectObj.disabled == true)
-			{
-				println("[DRONE] Waiting for " + projectBuy + " to get started");
-				//return;
-			}
-			else if (projectObj.disabled == false)
-			{
-				println("[DRONE] Getting " + projectBuy + "");
-				projectObj.click();
-				break;
-			}
-		}
-	}
-
 	for (let projectBuy of stage2ProjectEndList)
 	{
 		if (typeof document.getElementById(projectBuy) !== "undefined" && document.getElementById(projectBuy) !== null)
@@ -1008,7 +995,7 @@ var probeMode = "";
 var lastProbeMode = "";
 //var stage3ProjectBuyList = [ 'projectButton120', 'projectButton121', 'projectButton128', 'projectButton129', 'projectButton130', 'projectButton131', 'projectButton132', 'projectButton133', 'projectButton134', 'projectButton218' ];
 var stage3ProjectBuyList = [ 'project120', 'project121', 'project128', 'project129', 'project130', 'project131', 'project132', 'project133', 'project134', 'project218' ];
-var stage3HighPriorityList = [];
+var stage3HighPriorityList = [ { projID: 'project132', opsRequirement: 250000, creatRequirement:125000,clipsRequirement:Math.pow(10,30)*50 } ];
 
 if (typeof probesManager !== 'undefined')
 	clearInterval(probesManager);
@@ -1052,10 +1039,25 @@ var probesManager = setInterval(function()
 		synchSwarm(); 
 	}
 
+	if (entertainButtonDiv.style.display !== "none" && btnEntertainSwarm.disabled == false && creativity > 50000) 
+	{
+		println("[DRONE] Swarm needs entertainment, fixing");
+		entertainSwarm(); 
+	}	
+
+
 	// Look through the list of high priority projects; if any are here and the conditions are right, mark them HP
 	var highPriorityActiveProject = false;
 	for (let proj of stage3HighPriorityList)
 	{
+		var prj = window[proj.projID];
+		if (prj.priority == 1 && prj.flag == 0)
+		{
+			println("[PROBES] Project " + prj.id + " (" + prj.title + ") already marked high priority, continuing");
+			highPriorityActiveProject = true;
+			continue;
+		}
+
 		if (proj.projRequirementType == "ops")
 		{
 			if (operations >= proj.projRequirement)
@@ -1064,7 +1066,7 @@ var probesManager = setInterval(function()
 				println("Looking at " + proj.prodID);
 				
 				// Find the actual project object and update it
-				var prj = window[proj.projID];
+				
 				prj.priority = 1;
 
 				console.log("Priority: " + prj.priority);
@@ -1092,7 +1094,7 @@ var probesManager = setInterval(function()
 		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
 		if (highPriorityActiveProject == true)
 		{
-			if ( projectBuy.priority != 1)
+			if ( projectBuy.priority !== 1)
 			{
 				println("[PROBES] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
 				continue;
@@ -1103,6 +1105,7 @@ var probesManager = setInterval(function()
 		// FIXME: this section has to fire first, otherwise if it's processed below it won't trigger the end-game bits
 		if (stage3ProjectBuyList.indexOf(projectBuy.id) !== -1)
 		{
+			println("[PROBES] Trying to buy " +  projectBuy.title + " " + " / " + projectBuy.id);
 			// .. and we can afford it, let's clear this stage and move on. 
 			if ( projectBuy.cost() )
 			{
@@ -1130,40 +1133,7 @@ var probesManager = setInterval(function()
 		return b.priority - a.priority;
 	});*/
 
-	// first loop through projects and see if there is a high priority one that requires us to suspend buying low pri ones
-	var highPriorityActiveProject = false;
 
-	for (let projectBuy of stage3ProjectBuyList)
-	{
-		if (projectBuy.priority == 1)
-		{
-			highPriorityActiveProject = true;
-		}
-	}
-
-	// Now actually let's buy stuff
-	for (let projectBuy of stage3ProjectBuyList)
-	{
-		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
-		if (highPriorityActiveProject == true)
-		{
-			if (projectBuy.priority != 1)
-			{
-				println("[PROBES] projectBuy " + projectBuy.title + " is not a priority project, skipping");
-				continue;
-			}
-		}
-
-		if (projectBuy.cost())
-		{
-			println("[PROBES] projectBuy - buying" + projectBuy.title)
-			projectBuy.effect();
-		}
-		else
-		{
-			println("[PROBES] projectBuy - can't afford " + projectBuy.title)
-		}
-	}
 
 	// probeUsedTrust - amount of trust used
 	// probeTrust - amount of trust available
@@ -1737,6 +1707,7 @@ if (project46.flag == 0 && project35.flag == 0)
 	cfg_disableProbeLauncher = true;
 	cfg_disableProbesManager = true;
 
+	clearAllGraphs();
 	initGraphs(1).then(result => loadStage1Graphs());
 }
 else if (project35.flag == 1 && project46.flag !== 1)
@@ -1749,11 +1720,10 @@ else if (project35.flag == 1 && project46.flag !== 1)
 	cfg_disableModeling = false;
 	cfg_disableDroneManager = false;
 	cfg_disableProbeLauncher = true;
-	cfg_disableProbesManager = true;	
-	clearStage1Graphs();
+	cfg_disableProbesManager = true;
 
-	initGraphs(2).then(result => stage2Graphs()).then(resolve=>loadStage2Graphs());
-
+	clearAllGraphs();
+	initGraphs(2).then(resolve => stage2Graphs()).then(resolve=>loadStage2Graphs());
 }
 else if (project46.flag == 1)
 {
@@ -1766,10 +1736,9 @@ else if (project46.flag == 1)
 	cfg_disableDroneManager = true;
 	cfg_disableProbeLauncher = false;
 	cfg_disableProbesManager = false;	
-	clearStage2Graphs();
 
-	initGraphs(3).then(result => stage3Graphs()).then(resolve=>loadStage3Graphs());
-
+	clearAllGraphs();
+	initGraphs(3).then(resolve => stage3Graphs()).then(resolve=>loadStage3Graphs());
 }
 else
 {

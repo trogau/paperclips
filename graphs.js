@@ -57,13 +57,24 @@ function initGraphs(stage)
     
     j.onload = function() {
       graphLibLoaded = true;
-      console.log("LOADED graphs");
-      if (stage === 1)
+      console.log("LOADED graphs for stage: " + stage);
+      console.log(typeof(stage));
+      
+      /*if (stage === 1)
+      {
+        console.log("Calling stage 1 graphs " + stage );
         stage1Graphs();
-      else if (stage == 2)
-        stage2Graphs();
-      else if (stage == 3);
+      }
+      else if (stage === 2)
+      {
+        console.log("Calling stage 2 graphs " + stage );
+        stage2Graphs().then(resolve=>console.log("loaded stage 2"));
+      }
+      else if (stage === 3)
+      {
+        console.log("Calling stage 3 graphs " + stage );
         stage3Graphs();
+      }*/
 
       var fileref = document.createElement("link");
       fileref.rel = "stylesheet";
@@ -75,10 +86,10 @@ function initGraphs(stage)
       resolve(true);
     }
 
-    j.onerror = function() {
+    /*j.onerror = function() {
       console.log("ERROR occurred loading graph scripts");
       reject(false);
-    }
+    }*/
   });
 }
 
@@ -129,18 +140,18 @@ function stage1Graphs()
 function stage2Graphs()
 {
   console.log("================ DIVS FOR STAGE 2 GRAPHS ================");
-  if (typeof document.getElementById('graphDrones') == null)
-    return;
+  //if (typeof document.getElementById('graphDrones') == null)
+    //return;
     
-    return new Promise(function(resolve,reject)
-    {
-      var graphDrones = document.createElement('div'); 
-      graphDrones.style = "position: absolute;right:50px;top:150px;border: solid 1px green;width: 500px;height: 400px;"
-      graphDrones.id = "graphDronesDiv";
-      document.body.appendChild(graphDrones); 
+  return new Promise(function(resolve,reject)
+  {
+    var graphDrones = document.createElement('div'); 
+    graphDrones.style = "position: absolute;right:50px;top:150px;border: solid 1px green;width: 500px;height: 400px;"
+    graphDrones.id = "graphDronesDiv";
+    document.body.appendChild(graphDrones); 
 
-      resolve(true);
-    });
+    resolve(true);
+  });
 }
 
 function stage3Graphs()
@@ -559,9 +570,7 @@ function clearIntervalSafe(interval)
 
 function clearDivSafe(div)
 {
-  console.log("Checking div: " + div);
-
-  
+  console.log("Checking div: " + div); 
   
   if (document.getElementById(div) !== null)
   {
@@ -573,4 +582,14 @@ function clearDivSafe(div)
   {
     console.log("Tried to remove div but it didn't exist: " + div);
   }
+}
+
+/**
+ * Clear all the graphs
+ */
+function clearAllGraphs()
+{
+  clearStage1Graphs();
+  clearStage2Graphs();
+  clearStage3Graphs();
 }
