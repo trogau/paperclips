@@ -146,9 +146,15 @@ function stage2Graphs()
   return new Promise(function(resolve,reject)
   {
     var graphDrones = document.createElement('div'); 
-    graphDrones.style = "position: absolute;right:50px;top:150px;border: solid 1px green;width: 500px;height: 400px;"
+    graphDrones.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
     graphDrones.id = "graphDronesDiv";
     document.body.appendChild(graphDrones); 
+
+    var graphSolar = document.createElement('div'); 
+    graphSolar.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
+    graphSolar.id = "graphSolarDiv";
+    document.body.appendChild(graphSolar); 
+
 
     resolve(true);
   });
@@ -324,7 +330,7 @@ function graphRevenue()
         clearInterval(graphRevenueInterval);
     var dataRev = [];
     var t2 = new Date();
-    dataRev.push([t2, avgRev]);
+    dataRev.push([t2, avgRev, margin]);
 
     var graphRevenue = new Dygraph(document.getElementById("graphRevenueDiv"), dataRev,
         {
@@ -332,8 +338,24 @@ function graphRevenue()
             drawPoints: true,
             showRoller: true,
             rollPeriod: 1,
-            labels: ['Time', 'AvgRevenue'],
-            valueRange: [0.0],
+            labels: ['Time', 'AvgRevenue', 'Margin'],
+            series : {  'AvgRevenue': { axis: 'y1' }, 'Margin': { axis: 'y2' } },
+            axes: {
+              y1: {
+                // set axis-related properties here
+                drawGrid: false,
+                independentTicks: false,
+                valueRange: [0.0],
+              },
+              y2: {
+                // set axis-related properties here
+                labelsKMB: true,
+                drawGrid: true,
+                independentTicks: true,
+                valueRange: [0.0],
+              }
+            },
+            
         });
 
     var lastYomi = yomi;
@@ -341,7 +363,7 @@ function graphRevenue()
     graphRevenueInterval = setInterval(function () {
         var x = new Date();  // current time
 
-        dataRev.push([x, avgRev]);
+        dataRev.push([x, avgRev, margin]);
         if (dataRev.length > 100) {
             dataRev.splice(0, 1);
         }
@@ -359,7 +381,7 @@ function graphDrones()
       clearInterval(graphDronesRateInterval);
   var gdrdata = [];
   var t = new Date();
-  gdrdata.push([t, Math.random()]);
+  gdrdata.push([t, Math.random(), harvesterLevel, wireDroneLevel]);
 
   var gDrones = new Dygraph(document.getElementById("graphDronesDiv"), gdrdata,
       {
@@ -367,7 +389,25 @@ function graphDrones()
           drawPoints: true,
           showRoller: true,
           rollPeriod: 1,
-          labels: ['Time', 'ClipRate']
+          labels: ['Time', 'ClipRate', 'Harvesters', 'WireDrones'],
+          ylabel: 'Clips Per Second',
+          y2label: 'Drones',
+          series : {  'ClipRate': { axis: 'y1' }, 'Harvesters': { axis: 'y2' }, 'WireDrones': { axis: 'y2' } },
+          axes: {
+            y1: {
+              // set axis-related properties here
+              drawGrid: false,
+              independentTicks: false,
+              valueRange: [0.0],
+            },
+            y2: {
+              // set axis-related properties here
+              labelsKMB: true,
+              drawGrid: true,
+              independentTicks: true,
+              valueRange: [0.0],
+            }
+          }   
       });
 
   var lastClips = clips;
@@ -380,7 +420,57 @@ function graphDrones()
 
       //console.log("[GRAPH] Rate is " + diff + "  " + clips + " - " + lastClips);
 
-      gdrdata.push([x, clipRate]);
+      gdrdata.push([x, clipRate, harvesterLevel, wireDroneLevel]);
+      if (gdrdata.length > 100) {
+          gdrdata.splice(0, 1);
+      }
+      gDrones.updateOptions({ 'file': gdrdata });
+  }, 1000);
+  fixGraphBackground();
+}
+
+function graphSolar()
+{
+  if (typeof graphSolarInterval !== 'undefined')
+      clearInterval(graphSolarInterval);
+  var gdrdata = [];
+  var t = new Date();
+  gdrdata.push([t, farmLevel*50, 1]);
+
+  var gDrones = new Dygraph(document.getElementById("graphSolarDiv"), gdrdata,
+      {
+          title: "Power",
+          drawPoints: true,
+          showRoller: true,
+          rollPeriod: 1,
+          labels: ['Time', 'Power', 'Consumption'],
+          ylabel: 'Megawatts',
+          y2label: 'DroneCount',
+          series : {  'Power': { axis: 'y1' }, 'Consumption': { axis: 'y1' } },
+          axes: {
+            y1: {
+              // set axis-related properties here
+              drawGrid: false,
+              independentTicks: false
+            },
+            y2: {
+              // set axis-related properties here
+              labelsKMB: true,
+              drawGrid: true,
+              independentTicks: true
+            }
+          }          
+      });
+
+  var lastClips = clips;
+
+  graphSolarInterval = setInterval(function () {
+      var x = new Date();  // current time
+      
+      var powerProduction = farmLevel*50;
+      var powerConsumptionRate = (factoryPowerRate*factoryLevel) + wireDroneLevel + harvesterLevel;
+
+      gdrdata.push([x, powerProduction, powerConsumptionRate]);
       if (gdrdata.length > 100) {
           gdrdata.splice(0, 1);
       }
@@ -397,11 +487,8 @@ function graphExploration()
     clearInterval(graphExplorationInterval);
   var gexdata = [];
   var t = new Date();
-  for (var i = 10; i >= 0; i--) {
-      var x = new Date(t.getTime() - i * 1000);
-      gexdata.push([x, Math.random()]);
-  }
-
+  gexdata.push([t,0 ]);
+  
   var gExplored = new Dygraph(document.getElementById("graphExplorationDiv"), gexdata,
       {
           title: "Exploration Rate",
@@ -530,11 +617,14 @@ function clearStage2Graphs()
 {
   clearIntervalSafe('graphDronesRateInterval');
   clearDivSafe('graphDronesDiv');
+  clearIntervalSafe('graphSolarInterval');
+  clearDivSafe('graphSolarDiv');  
 }
 
 function loadStage2Graphs()
 {
   graphDrones();
+  graphSolar();
 }
 
 function clearStage3Graphs()
@@ -559,28 +649,28 @@ function clearIntervalSafe(interval)
 {
   if (typeof interval !== 'undefined')
   {
-    console.log("Trying to clear interval: " + interval);
-    //clearInterval(interval);
+    //console.log("Trying to clear interval: " + interval);
+    clearInterval(interval);
   }
   else
   {
-    console.log("Interval not found: " + interval);
+    //console.log("Interval not found: " + interval);
   }
 }
 
 function clearDivSafe(div)
 {
-  console.log("Checking div: " + div); 
+  //console.log("Checking div: " + div); 
   
   if (document.getElementById(div) !== null)
   {
     
-    console.log("Removing div: " + div);
+    //console.log("Removing div: " + div);
     document.getElementById(div).remove();
   }
   else
   {
-    console.log("Tried to remove div but it didn't exist: " + div);
+    //console.log("Tried to remove div but it didn't exist: " + div);
   }
 }
 

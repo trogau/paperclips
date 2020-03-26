@@ -11,7 +11,7 @@ function println(line)
 // priorities for late game
 projects.forEach(function(proj) { proj.priority = 0; });
 
-project132.priority = 1; // Monment to the Driftwar Fallen
+//project132.priority = 1; // Monment to the Driftwar Fallen
 
 /**
  * COLOURER
@@ -53,55 +53,101 @@ var pricer = setInterval(function() {
 	if (cfg_disablePricer == true)
 		return;
 
-	/*if (demand < 7)
+	let clipRateMultiplier = 4;
+	if (clipRate > 50000)
+		clipRateMultiplier = 8;
+	else if (clipRate > 10000)
+		clipRateMultiplier = 7;
+	else if (clipRate > 1000)
+		clipRateMultiplier = 6;
+
+
+	
+	/*
+	var targetClips = clipRate*(clipRateMultiplier);
+	var tooManyClips = clipRate*(clipRateMultiplier*1.3);
+
+	if (unsoldClips < 10) // FIXME: a hack to stop the condition where we run out of clips
+		lowerPrice();
+
+	if (unsoldClips < targetClips)// && clipRate > 400)
 	{
-		println("[PRICER] No demand!");
+		// if the clipRate is above the avgSales, we can stop raising the price
+		if (clipRate > avgSales*1.5)
+		{
+			println("[PRICER] avgSales is > 150% of clipRate, so we're NOT raising the price");
+			return;
+		}
+		println("[PRICER] Not enough unsold clips, raising price to " + margin + " (Clip rate multiplier: " + clipRateMultiplier + ", range: " + Math.round(targetClips) + " - " + Math.round(tooManyClips) + ")");
+		raisePrice();
+		return;
+	}
+	else if (unsoldClips > tooManyClips) // If we have way too many clips
+	{
+		// IF THE DIFFERENCE BETWEEN AVG SOLD & CLIPS PER SEC IS TOO BIG, STOP LOWERING
+		if (avgSales > clipRate*1.25) 
+		{
+			println("[PRICER] avgSales is > 125% of clipRate, so we're NOT lowering the price");
+			return;
+
+		}		
+		println("[PRICER] Too many unsold clips, lowering price to " + margin + " (Clip rate multiplier: " + clipRateMultiplier + ", range: " + Math.round(targetClips) + " - " + Math.round(tooManyClips) + ")");
+		lowerPrice();
+		return;
+	}
+	else
+	{
+		println("[PRICER] SWEET SPOT! Between " + targetClips + " - " + tooManyClips);
+	}
+
+	return;*/
+
+	// If we have way too many clips
+	if (unsoldClips > 5*clipRate)
+	{
+		let targetMargin = margin*0.8;
+		if (targetMargin < 0.01)
+			targetMargin = 0.01;
+
+		println("[PRICER] Too many unsold clips, lowering price to " + targetMargin);
+
+		while (margin > targetMargin)
+			lowerPrice();
+	}
+	else if (unsoldClips < clipRate) // If we have way too few clips
+	{
+		let targetMargin = margin*1.1; 
+		if (targetMargin > 1) // cap this or it will go out of control and hang!@#
+			targetMargin = 1;
+		else
+			println("TARGET MARGIN: " + targetMargin);
+
+		println("[PRICER] Not enough unsold clips, raising price to " + targetMargin);
+
+		while (margin < targetMargin)
+			raisePrice();
+
+		return;
+	}
+
+	if (Math.floor(avgSales) <= clipRate)
+	{
 		if (margin > 0.01)
 		{
-			lowerPrice();
-			println("[PRICER] No demand, lowering price to " + margin);
-		}
-		return;
-	}
-	*/
-
-	/*
-	// this shit just makes a mess
-	if (unsoldClips < clipRate * 3) // 4x buffer of unsold clips?
-	{
-		raisePrice();
-		raisePrice();
-		raisePrice();
-		println("[PRICER] Buffering clips: raising price to " + margin);
-		return;
-	}
-	else if (unsoldClips > clipRate * 6 && unsoldClips > 3000) // 3k limit otherwise it gets close to zero and price gets too low early game
-	{
-		if (margin < 0.04)
-		{
-			if (Math.random > 0.5) // 50% chance we'll skip lowering price to smooth it out a bit
+			if (avgSales > clipRate*1.25) 	
 			{
-				println("[PRICER] De-buffering clips: lowering price to " + margin);
+				println("[PRICER] avgSales is > 125% of clipRate, so we're NOT lowering the price");
+			}
+			else
+			{
+				println("[PRICER] Lowering price to " + margin);
 				lowerPrice();
 			}
 		}
 		else
 		{
+			println("[PRICER] WARNING Margin is 0.01 and sales are still low");
 
-		}
-		return;
-	}
-	else
-	{
-		println("[PRICER] No rules for this scenario!")
-	}*/
-
-	if (avgSales < clipRate)
-	{
-		if (margin > 0.01)
-		{
-			println("[PRICER] Lowering price to " + margin);
-			lowerPrice();
 		}
 	}
 	else
@@ -109,46 +155,20 @@ var pricer = setInterval(function() {
 		println("[PRICER] Raising price to " + margin);
 		raisePrice();
 	}
+
+
 
 	return;
-
-	/*clipTarget = clips/100;
-	if (clips > 10000)
-		clipTarget = clipTarget + 100;
-	if (unsoldClips > clipTarget )
-	{
-		if (margin > 0.01)//  && demand < 50) // 500% demand 
-		{
-			lowerPrice();
-			if (unsoldClips > 1000000 || demand < 10) // if demand is below 100 or they're piling up fast, increase the rate at which we lower the price
-			{
-				//println("[PRICER] Triple lower!")
-				if (margin > 0.01)
-					lowerPrice();
-				if (margin > 0.01)
-					lowerPrice();
-			}
-			println("[PRICER] Lowering price to " + margin);
-		}
-	}
-	else 
-	{
-		raisePrice();
-		raisePrice();
-		raisePrice();
-
-		println("[PRICER] Raising price to " + margin);
-
-	}
-	*/
-}, 3000);
+}, 2000);
 
 /**
  * STAGE 1 INVESTOR
  */
 //var stage1ProjectBuyList = [ 'projectButton1', 'projectButton3', 'projectButton4', 'projectButton5', 'projectButton6', 'projectButton7', 'projectButton8', 'projectButton9', 'projectButton10', 'projectButton10b', 'projectButton11','projectButton12', 'projectButton13', 'projectButton14', 'projectButton15', 'projectButton16', 'projectButton17', 'projectButton19','projectButton20', 'projectButton21', 'projectButton22','projectButton23', 'projectButton24', 'projectButton25', 'projectButton26', 'projectButton27', 'projectButton28', 'projectButton29', 'projectButton30', 'projectButton31', 'projectButton34', 'projectButton40', 'projectButton40b','projectButton42', 'projectButton50', 'projectButton51', 'projectButton60', 'projectButton61', 'projectButton62', 'projectButton63', 'projectButton64', 'projectButton65', 'projectButton66', 'projectButton70', 'projectButton119'];
 var stage1ProjectBuyList = [ 'project1', 'project3', 'project4', 'project5', 'project6', 'project7', 'project8', 'project9', 'project10', 'project10b', 'project11','project12', 'project13', 'project14', 'project15', 'project16', 'project17', 'project19','project20', 'project21', 'project22','project23', 'project24', 'project25', 'project26', 'project27', 'project28', 'project29', 'project30', 'project31', 'project34', 'project40', 'project40b','project42', 'project50', 'project51', 'project60', 'project61', 'project62', 'project63', 'project64', 'project65', 'project66', 'project70', 'project119'];
-var stage1HighPriorityList = [ { projID: 'project26', projRequirement: 10000, projRequirementType: "ops" }  ];
+var stage1HighPriorityList = [ 	{ projID: 'project26', projRequirement: 10000, projRequirementType: "ops" },
+								{ projID: 'project3', projRequirement: 1000, projRequirementType: "ops" },
+								{ projID: 'project50', projRequirement: 10000, projRequirementType: "ops" } ];
 var stage1ProjectEndList = [ 'projectButton35']; // this needs to be a button string because of the way we check for end conditions
 var cfg_disableInvestor = true;
 if (typeof investor !== 'undefined')
@@ -171,16 +191,16 @@ var investor = setInterval(function() {
 	{
 		if (proj.projRequirementType == "ops")
 		{
-			if (operations >= proj.projRequirement)
+			if (memory*1000 >= proj.projRequirement) //  wait until we have reached the min # of ops needed to reach this target 
 			{
-				println(proj);
-				println("Looking at " + proj.prodID);
+				//println(proj);
+				//println("Looking at " + proj.projID);
 				
 				// Find the actual project object and update it
 				var prj = window[proj.projID];
 				prj.priority = 1;
 
-				console.log("Priority: " + prj.priority);
+				//console.log("Priority: " + prj.priority);
 
 				if (prj.element === null || prj.flag == 1)
 					continue;
@@ -197,9 +217,12 @@ var investor = setInterval(function() {
 	//for (let projectBuy of stage1ProjectBuyList)
 	for (let projectBuy of activeProjects)
 	{
+		if (projectsDiv.style.display === "none") // div not yet visible, no projects - STAGE 1 ONLY
+			continue;
+
 		//println("[INVESTOR] projectBuy: " +  prj.title);
-		// if we're not in the list of pre-approved projects, let's skip
-		if (stage1ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1)
+		// If we're NOT in the list of pre-approved projects AND we're NOT in the list of end projects, let's skip
+		if (stage1ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1 && (stage1ProjectEndList.indexOf(projectBuy.id) == -1) )
 			continue;  
 
 		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
@@ -212,65 +235,46 @@ var investor = setInterval(function() {
 			}
 		}
 
+
 		// If this element is in our End List
 		// FIXME: this section has to fire first, otherwise if it's processed below it won't trigger the end-game bits
-		if (stage1ProjectEndList.indexOf(projectBuy.id) !== -1)
+		if (stage1ProjectEndList.indexOf(projectBuy.id) >= 0)
 		{
 			// .. and we can afford it, let's clear this stage and move on. 
 			if ( projectBuy.cost() )
 			{
+				console.log("[INVESTOR] END OF GAME RELEASE THE HYPNODRONES");
 				cfg_disableDroneManager = false; // enable the drone manager
 				clearInterval(investor); // disable the investor interval
 				clearInterval(clicker);
 				clearInterval(pricer);
 				clearStage1Graphs();
+				initGraphs(2).then(resolve => stage2Graphs()).then(resolve=>loadStage2Graphs());
 
-				initGraphs(2).then(result => stage2Graphs()).then(resolve=>loadStage2Graphs());
+				projectBuy.effect();
 				return;			
 			}
 		}
+		else
+		{
+			//println("[INVESTOR] projectBuy not in end list '" +  projectBuy.title + "' / " + projectBuy.id)
+		}	
 
 		if ( projectBuy.cost() )
 		{
-			println("[INVESTOR] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
+			println("[INVESTOR] projectBuy - buying '" +  projectBuy.title + "' / " + projectBuy.id)
 			projectBuy.effect();
 			break; // FIXME: multiple of these running in a row and the cost() fails to restrict it from buying. Probably another function call to recalculate missing.
 		}
 		else
 		{
-			println("[INVESTOR] projectBuy - can't afford " +  projectBuy.title + " / " + projectBuy.id)
+			//println("[INVESTOR] projectBuy - can't afford '" +  projectBuy.title + "' / " + projectBuy.id)
 		}		
 	}
 
 	/**
-	 * STAGE ENDS
+	 * FULL MONOPOLY
 	 */
-	/*
-	for (let projectBuy of stage1ProjectEndList) // assume this array will only ever have one element for now (lazy)
-	{
-		if (typeof document.getElementById(projectBuy) !== "undefined" && document.getElementById(projectBuy) !== null)
-		{
-			projectObj = document.getElementById(projectBuy);		
-
-			if (projectObj.disabled == true)
-			{
-				tmpProjectBuys = tmpProjectBuys + " | " + projectBuy;
-			}
-			else if (projectObj.disabled == false)
-			{
-				println("[INVESTOR] END GAME! Getting " + projectBuy + "");
-				cfg_disableDroneManager = false; // enable the drone manager
-				clearInterval(investor); // disable the investor interval
-				clearInterval(clicker);
-				clearInterval(pricer);				
-				projectObj.click();
-
-				return; // skip further processing, we're done here
-			}
-		}
-	}
-	*/
-
 	if (typeof projectButton38 !== "undefined" && projectButton38.disabled == true && portTotal+funds >= 8500000) // was 7m, way too early
 	{
 		println("[INVESTOR] Mid game: stockpiling for Full Monopoly");
@@ -333,10 +337,9 @@ var investor = setInterval(function() {
 	}
 
 
-	var buyStr = "";
 	if (wire == 0)  // FIXME this isn't great
 	{ 
-		buyStr = buyStr + "3x wire";
+		println("[INVESTOR] Buying 3x wire");
 
 		if (wireCost*3 < funds)
 			for ($i = 0; $i < 3; $i++)
@@ -346,7 +349,7 @@ var investor = setInterval(function() {
 	} 
 	else if (wire < 2000) 
 	{ 
-		buyStr = buyStr + "1x wire";
+		println("[INVESTOR] Buying 1x wire");
 		buyWire(); 
 
 		if (clips > 500000000)
@@ -372,12 +375,14 @@ var investor = setInterval(function() {
 		{
 			println("[INVESTOR] Plenty of spare bankroll, making a withdrawal to buy MEGAclippers while we have < 100 of them");
 			investWithdraw();
+			println("[INVESTOR] Buying MEGAclipper");
 			makeMegaClipper();
 			investDeposit();
 		}
-		if (megaClipperCost < funds)
+
+		if (megaClipperCost < funds && unsoldClips < 2000000 ) // FIXME: this needs to be better coupled with the check in buyAds below
 		{
-			buyStr = buyStr + "MEGAclipper";
+			println("[INVESTOR] Buying MEGAclipper");
 			makeMegaClipper();
 		}
 	}
@@ -387,23 +392,25 @@ var investor = setInterval(function() {
 	}
 	else if (clipperCost < funds && (funds > 200 || clipperCost < 20) && clipperCost < adCost*0.25) // 25% ad cost should help speed up early levels by getting some quick adbuys
 	{
-		buyStr = buyStr + "clipper";
+		println("[INVESTOR] Buying clippers");
 		makeClipper();
 	}
 
 	if (adCost < funds)
 	{
-		if (marketingLvl < 15 || portTotal > adCost*5 ) // at 14, it costs $819,200, so it's getting expensive
+		if (marketingLvl < 15 || portTotal+funds > adCost*5 ) // at 14, it costs $819,200, so it's getting expensive
 		{
-			buyStr = buyStr + "marketing";
+			println("[INVESTOR] Buying ads");
 			buyAds();
 		}
 		else if (marketingLvl < 4)
 		{
+			println("[INVESTOR] Buying ads");
 			buyAds();
 		}
 		else if (adCost*4 < funds)
 		{
+			println("[INVESTOR] Buying ads");
 			buyAds();
 		}
 		else
@@ -411,11 +418,26 @@ var investor = setInterval(function() {
 			println("[INVESTOR] Can afford marketing, but not buying it...?");
 		}
 	}
+	else
+	{
+		// If adCost > funds, maybe we need to think about saving for some ads?
+		if (marketingLvl < 15 && unsoldClips > 2000000)
+		{
+			console.log("[INVESTOR] Marketing under lvl 15 & lots of unsold clips, saving to buy ads");
+			if (adCost < portTotal+funds)
+			{
+				investStratElement.selectedIndex = 0;
+				investWithdraw();
+			}
+			else
+			{
+				investStratElement.selectedIndex = 2;
+				investDeposit();
+			}
+			return;
+		}
+	}
 
-	if (buyStr == "")
-		buyStr = "nothing!";
-
-	println("[INVESTOR] Buying " + buyStr);
 	// https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
 	if (getComputedStyle(document.getElementById("investmentEngine")).display == "none")
 	{
@@ -438,14 +460,14 @@ var investor = setInterval(function() {
 		}
 		else
 		{
-			println("[INVESTOR] Depositing " + funds); 
+			println("[INVESTOR] Depositing " + Math.round(funds));
 			investDeposit(); 
 			if (investLevel > 4)
 				investStratElement.selectedIndex = 2; // Set to High Risk
 			else if (investLevel > 2)
 				investStratElement.selectedIndex = 1; // Set to Medium Risk
 			else
-				investStratElement.selectedIndex = 0; // Set to Medium Risk
+				investStratElement.selectedIndex = 0; // Set to Low Risk
 		}
 	}
 
@@ -631,10 +653,10 @@ var droneManager = setInterval(function() {
 	{
 		if (proj.projRequirementType == "ops")
 		{
-			if (operations >= proj.projRequirement)
+			if (memory*1000 >= proj.projRequirement)
 			{
 				println(proj);
-				println("Looking at " + proj.prodID);
+				println("Looking at " + proj.projID);
 				
 				// Find the actual project object and update it
 				var prj = window[proj.projID];
@@ -688,10 +710,11 @@ var droneManager = setInterval(function() {
 				cfg_disableProbesManager = false;
 				clearInterval(droneManager);
 				clearStage2Graphs();
-				initGraphs(3).then(result => stage2Graphs()).then(resolve=>loadStage2Graphs());
+				initGraphs(3).then(result => stage3Graphs()).then(resolve=>loadStage3Graphs());
 
 				println("[DRONE] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
 				projectBuy.effect();
+				manageProjects();
 	
 				return;			
 			}
@@ -701,6 +724,7 @@ var droneManager = setInterval(function() {
 		{
 			println("[DRONE] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
 			projectBuy.effect();
+			manageProjects();
 			break; // FIXME: multiple of these running in a row and the cost() fails to restrict it from buying. Probably another function call to recalculate missing.
 		}
 		else
@@ -749,7 +773,12 @@ var droneManager = setInterval(function() {
 
 	var droneMultiplier = 1;
 
-	if ( (harvesterCost + wireDroneCost) * 1000 < (unusedClips - unusedClips/10))
+	if ( (harvesterCost + wireDroneCost) * 10000 < (unusedClips - unusedClips/10)) // technically cheating but just to speed things up from having to write my own buying function
+	{
+		droneMultiplier = 10000;
+		println("[DRONE] Drone Multiplier changed to " + droneMultiplier + ", plenty of spare clips");
+	}
+	else if ( (harvesterCost + wireDroneCost) * 1000 < (unusedClips - unusedClips/10))
 	{
 		droneMultiplier = 1000;
 		println("[DRONE] Drone Multiplier changed to " + droneMultiplier + ", plenty of spare clips");
@@ -846,10 +875,13 @@ var droneManager = setInterval(function() {
 		makeFactory();
 		if (availableMatter == 0) // If we're at the end game, stock up on factories
 		{
-			while (factoryCost < unusedClips)
+			for (let i = 0; i < 10; i++)
 			{
-				console.log("[DRONE] Bulk buying factory!!!")
-				makeFactory();
+				if (factoryCost < unusedClips)
+				{
+					console.log("[DRONE] Bulk buying factories!!! " + i)
+					makeFactory();
+				}
 			}
 		}
 	}
@@ -1050,40 +1082,65 @@ var probesManager = setInterval(function()
 	var highPriorityActiveProject = false;
 	for (let proj of stage3HighPriorityList)
 	{
+		// If one project is already flagged as HP we can ignore the rest
+		//if (highPriorityActiveProject == true)
+		//	continue;
+
 		var prj = window[proj.projID];
-		if (prj.priority == 1 && prj.flag == 0)
+
+		/*// If the priority flag is already set AND the flag is zero AND it's not in the list of activeProjects
+		if (prj.priority == 1 && prj.flag == 0 && activeProjects.indexOf(prj) !== -1)
 		{
 			println("[PROBES] Project " + prj.id + " (" + prj.title + ") already marked high priority, continuing");
 			highPriorityActiveProject = true;
 			continue;
 		}
+		*/
 
-		if (proj.projRequirementType == "ops")
+		if (proj.opsRequirement !== undefined)
 		{
-			if (operations >= proj.projRequirement)
+			// If our base operations count is enough so that's it's possible to achieve, we can flag it as OK
+			if (memory*1000 >= proj.opsRequirement)
 			{
-				println(proj);
-				println("Looking at " + proj.prodID);
+				println("============= Looking at " + proj.projID);
 				
 				// Find the actual project object and update it
 				
 				prj.priority = 1;
 
-				console.log("Priority: " + prj.priority);
+				console.log("============= Priority: " + prj.priority);
 
 				if (prj.element === null || prj.flag == 1)
 					continue;
 				else
 				{
-					//println("HIGH PRIORITY PROJECT " + proj.projID);
+					println("============= HIGH PRIORITY PROJECT " + proj.projID);
 					highPriorityActiveProject = true;
 				}
 			}
 		}
+
+		if (proj.creatRequirement !== undefined)
+		{
+			if (creativity > proj.creatRequirement*2 ) 
+			{
+				println("[PROBES] Surplus creat, so we can disable HP for now");
+				highPriorityActiveProject = false;
+			}
+			else
+				println("[PROBES] No surplus creat");
+		}
+
+		if (proj.clipsRequirement !== undefined)
+		{
+			if (proj.clipsRequirement) 
+			{}
+		}
+
+
 	}
 
 	// Now actually let's buy stuff
-	//for (let projectBuy of stage3ProjectBuyList)
 	for (let projectBuy of activeProjects)
 	{
 		//println("[INVESTOR] projectBuy: " +  prj.title);
@@ -1242,6 +1299,32 @@ var probesManager = setInterval(function()
 	}
 	else if (probeCount <= 80000000)
 	{
+		var probeMode = "20m-80m-new-meta";
+		if (checkProbeModeChange(probeMode) == false)
+			return;
+		resetAllProbes();
+		println("[PROBES] 20m-80m probes! New meta");
+
+		resetAllProbes();
+		let ratioTotal = 23;
+		targetSpeed = Math.floor(4  * (probeTrust / ratioTotal));
+		targetNav = Math.floor(0 * (probeTrust / ratioTotal));
+		targetRep = Math.floor(9 * (probeTrust / ratioTotal));
+		targetHaz = Math.floor(7 * (probeTrust / ratioTotal));
+		targetFac = Math.floor(0  * (probeTrust / ratioTotal));
+		targetWire = Math.floor(0  * (probeTrust / ratioTotal));
+		targetHarv = Math.floor(0  * (probeTrust / ratioTotal));
+		targetCombat = Math.floor(3  * (probeTrust / ratioTotal));
+
+		setProbeValue('Speed', targetSpeed);
+		setProbeValue('Nav', targetNav);
+		setProbeValue('Rep', targetRep);
+		setProbeValue('Haz', targetHaz);
+		setProbeValue('Fac', targetFac);
+		setProbeValue('Harv', targetHarv);
+		setProbeValue('Wire', targetWire);
+		setProbeValue('Combat', targetCombat);			
+		/*
 		if (drifterCount < probeCount / 2)
 		{
 			var probeMode = "20m-80m-boost-farming-combat";
@@ -1331,7 +1414,7 @@ var probesManager = setInterval(function()
 			setProbeValue('Wire', 1);
 			setProbeValue('Speed', 2);
 			setProbeValue('Nav', 2);
-		}
+		}*/
 		assignSpareTrust();
 		return;
 		/* // Saving the day formula
@@ -1413,7 +1496,7 @@ var probesManager = setInterval(function()
 
 		// 1:2 Speed/Nav seems best ratio for fastest exploration
 		targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
-		targetNav = Math.floor(6 * (probeTrust / ratioTotal));
+		targetNav = Math.floor(5 * (probeTrust / ratioTotal));
 		targetRep = Math.floor(10  * (probeTrust / ratioTotal));
 		targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
 		targetFac = Math.floor(1 * (probeTrust / ratioTotal));
@@ -1445,15 +1528,15 @@ var probesManager = setInterval(function()
 	}
 	else if (drifterCount < probeCount && probeCount >= 1000000000000000) // 1 quadrillion. FIXME maybe can do this earlier?
 	{
-		var probeMode = "1q-stable-explore-combat";
-		if (checkProbeModeChange(probeMode) == false)
-			return;
-
-		resetAllProbes();
-			// 1:2 Speed/Nav seems best ratio for fastest exploration
+		// 1:2 Speed/Nav seems best ratio for fastest exploration
 		if (acquiredMatter > 0) // if we have a buildup of matter
 		{
-			println("MATTER MODE!!!");
+			var probeMode = "1q-stable-explore-combat-too-much-matter";
+			if (checkProbeModeChange(probeMode) == false && Math.random() < 0.10) // randomly update late game
+				return;
+	
+			resetAllProbes();
+				println("MATTER MODE!!!");
 			let ratioTotal = 34;
 			targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
 			targetNav = Math.floor(6 * (probeTrust / ratioTotal));
@@ -1475,15 +1558,20 @@ var probesManager = setInterval(function()
 		}
 		else
 		{
-			println("Acquired Matter is: " + acquiredMatter);
-			let ratioTotal = 31;
+			var probeMode = "1q-stable-explore-combat-no-matter";
+			if (checkProbeModeChange(probeMode) == false && Math.random() < 0.10) // randomly update late game
+				return;
+	
+			resetAllProbes();
+	
+			let ratioTotal = 34;
 			targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
 			targetNav = Math.floor(6 * (probeTrust / ratioTotal));
 			targetRep = Math.floor(10  * (probeTrust / ratioTotal));
 			targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
-			targetFac = 0;
-			targetWire = 0;
-			targetHarv = 0;
+			targetFac = Math.floor(1 * (probeTrust / ratioTotal));
+			targetWire = Math.floor(1 * (probeTrust / ratioTotal));
+			targetHarv = Math.floor(1 * (probeTrust / ratioTotal));
 			targetCombat = Math.floor(3 * (probeTrust / ratioTotal));
 	
 			setProbeValue('Speed', targetSpeed);
@@ -1535,6 +1623,35 @@ var probesManager = setInterval(function()
 		println("========================================================");
 		println("[PROBES] NO PROBE RULES TO MATCH THIS SCENARIO???!!!")
 		println("========================================================");
+		var probeMode = "fallback-mode";
+		if (checkProbeModeChange(probeMode) == false)
+			return;
+
+		resetAllProbes();
+		let ratioTotal = 34;
+
+		// 1:2 Speed/Nav seems best ratio for fastest exploration
+		targetSpeed = Math.floor(5 * (probeTrust / ratioTotal));
+		targetNav = Math.floor(3 * (probeTrust / ratioTotal));
+		targetRep = Math.floor(10  * (probeTrust / ratioTotal));
+		targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
+		targetFac = Math.floor(1 * (probeTrust / ratioTotal));
+		targetWire = Math.ceil(1 * (probeTrust / ratioTotal));
+		targetHarv = Math.ceil(1 * (probeTrust / ratioTotal));
+		targetCombat = Math.floor(5 * (probeTrust / ratioTotal));
+
+		setProbeValue('Speed', targetSpeed);
+		setProbeValue('Nav', targetNav);
+		setProbeValue('Rep', targetRep);
+		setProbeValue('Haz', targetHaz);
+		setProbeValue('Fac', targetFac);
+		setProbeValue('Harv', targetHarv);
+		setProbeValue('Wire', targetWire);
+		setProbeValue('Combat', targetCombat);
+
+		assignSpareTrust();
+		return;		
+
 	}
 	//if (combatButtonDiv.style.display !== "none")
 }, 4000);
@@ -1560,7 +1677,7 @@ function assignSpareTrust()
 {
 	let spareTrust = probeTrust - getProbeUsedTrust();
 		
-	println("[SPARETRUST] Spare trust is: " + spareTrust);
+	//println("[SPARETRUST] Spare trust is: " + spareTrust);
 
 	let rotateTrust = [ 'Rep', 'Haz', 'Speed' ];
 
@@ -1601,11 +1718,13 @@ function checkProbeModeChange(probeMode)
 	{
 		println("[PROBES] Still in mode: " + probeMode + ", returning, no need for changes; assigning spare trust");
 		lastProbeMode = probeMode;
-		if (Math.random() < 0.1) // randomly change the mode to check to see if we need to re-adjust the 
+
+		/*if (Math.random() < 0.1) // randomly change the mode to check to see if we need to re-adjust the 
 		{
 			println("[PROBES] Forcing a mode change to check on stuff");
 			return true;
 		}
+		*/
 		assignSpareTrust();
 		return false; 
 	}
@@ -1647,7 +1766,7 @@ function setProbeValue(field, target)
 	raiseButton = document.getElementById('btnRaiseProbe' + field);
 	lowerButton = document.getElementById('btnLowerProbe' + field);
 
-	println("[SETVALUE] Value for " + field + " is currently: " + window['probe' + field] + " (Target: " + target + ")");
+	//println("[SETVALUE] Value for " + field + " is currently: " + window['probe' + field] + " (Target: " + target + ")");
 
 	if (window['probe' + field] > target && window['probe' + field] > 0)
 	{
@@ -1657,6 +1776,8 @@ function setProbeValue(field, target)
 			tmpct = tmpct + 1;
 			if (tmpct > 20)
 			{
+				// this should never happen, left in for legacy testing reasons
+				println("============================================================"); 
 				println("[SETVALUE] BREAKING, LOWER tmpct limit hit");
 				break;
 			}				
@@ -1708,7 +1829,7 @@ if (project46.flag == 0 && project35.flag == 0)
 	cfg_disableProbesManager = true;
 
 	clearAllGraphs();
-	initGraphs(1).then(result => loadStage1Graphs());
+	initGraphs(1).then(resolve => stage1Graphs()).then(resolve => loadStage1Graphs());
 }
 else if (project35.flag == 1 && project46.flag !== 1)
 {
