@@ -4,3 +4,5 @@ Some browser console-based hacks for the Paperclips game (https://www.decisionpr
 
 - an automated  solver 
 - some metric graphing
+
+![Example image](https://raw.githubusercontent.com/trogau/paperclips/master/pclip.jpg)
