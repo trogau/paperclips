@@ -11,7 +11,7 @@ function println(line)
 // priorities for late game
 projects.forEach(function(proj) { proj.priority = 0; });
 
-//project132.priority = 1; // Monment to the Driftwar Fallen
+project132.priority = 1; // Monment to the Driftwar Fallen
 
 /**
  * COLOURER
@@ -50,125 +50,87 @@ var cfg_disablePricer = true;
 if (typeof pricer !== 'undefined')
 	clearInterval(pricer);
 var pricer = setInterval(function() {
-	if (cfg_disablePricer == true)
+	if (cfg_disablePricer === true)
 		return;
-
-	let clipRateMultiplier = 4;
-	if (clipRate > 50000)
-		clipRateMultiplier = 8;
-	else if (clipRate > 10000)
-		clipRateMultiplier = 7;
-	else if (clipRate > 1000)
-		clipRateMultiplier = 6;
-
-
 	
+	// this shit just makes a mess
 	/*
-	var targetClips = clipRate*(clipRateMultiplier);
-	var tooManyClips = clipRate*(clipRateMultiplier*1.3);
-
-	if (unsoldClips < 10) // FIXME: a hack to stop the condition where we run out of clips
-		lowerPrice();
-
-	if (unsoldClips < targetClips)// && clipRate > 400)
+	if (unsoldClips < clipRate * 3) //  buffer of unsold clips?
 	{
-		// if the clipRate is above the avgSales, we can stop raising the price
-		if (clipRate > avgSales*1.5)
-		{
-			println("[PRICER] avgSales is > 150% of clipRate, so we're NOT raising the price");
-			return;
-		}
-		println("[PRICER] Not enough unsold clips, raising price to " + margin + " (Clip rate multiplier: " + clipRateMultiplier + ", range: " + Math.round(targetClips) + " - " + Math.round(tooManyClips) + ")");
-		raisePrice();
-		return;
-	}
-	else if (unsoldClips > tooManyClips) // If we have way too many clips
-	{
-		// IF THE DIFFERENCE BETWEEN AVG SOLD & CLIPS PER SEC IS TOO BIG, STOP LOWERING
-		if (avgSales > clipRate*1.25) 
-		{
-			println("[PRICER] avgSales is > 125% of clipRate, so we're NOT lowering the price");
-			return;
+		raisePrice(); raisePrice(); raisePrice();
 
-		}		
-		println("[PRICER] Too many unsold clips, lowering price to " + margin + " (Clip rate multiplier: " + clipRateMultiplier + ", range: " + Math.round(targetClips) + " - " + Math.round(tooManyClips) + ")");
-		lowerPrice();
-		return;
-	}
-	else
-	{
-		println("[PRICER] SWEET SPOT! Between " + targetClips + " - " + tooManyClips);
-	}
-
-	return;*/
-
-	// If we have way too many clips
-	if (unsoldClips > 5*clipRate)
-	{
-		let targetMargin = margin*0.8;
-		if (targetMargin < 0.01)
-			targetMargin = 0.01;
-
-		println("[PRICER] Too many unsold clips, lowering price to " + targetMargin);
-
-		while (margin > targetMargin)
-			lowerPrice();
-	}
-	else if (unsoldClips < clipRate) // If we have way too few clips
-	{
-		let targetMargin = margin*1.1; 
-		if (targetMargin > 1) // cap this or it will go out of control and hang!@#
-			targetMargin = 1;
-		else
-			println("TARGET MARGIN: " + targetMargin);
-
-		println("[PRICER] Not enough unsold clips, raising price to " + targetMargin);
-
-		while (margin < targetMargin)
-			raisePrice();
-
+		if (Math.random() > 0.7)
+			println("[PRICER] Buffering clips: raising price to " + margin);
 		return;
 	}
 
-	if (Math.floor(avgSales) <= clipRate)
+	if (unsoldClips > clipRate*40)
+	{
+		lowerPrice(); lowerPrice(); lowerPrice(); lowerPrice(); lowerPrice(); 
+		lowerPrice(); lowerPrice(); lowerPrice(); lowerPrice(); lowerPrice(); 
+
+		if (Math.random() > 0.7)
+			println("[PRICER] De-buffering clips: lowering price to " + margin);
+	}
+
+	if (avgSales < clipRate)
 	{
 		if (margin > 0.01)
 		{
-			if (avgSales > clipRate*1.25) 	
-			{
-				println("[PRICER] avgSales is > 125% of clipRate, so we're NOT lowering the price");
-			}
-			else
-			{
+			if (Math.random() > 0.7)
 				println("[PRICER] Lowering price to " + margin);
-				lowerPrice();
-			}
-		}
-		else
-		{
-			println("[PRICER] WARNING Margin is 0.01 and sales are still low");
-
+			lowerPrice();
 		}
 	}
 	else
 	{
-		println("[PRICER] Raising price to " + margin);
+		if (Math.random() > 0.7)
+			println("[PRICER] Raising price to " + margin);
 		raisePrice();
 	}
+	*/
 
+	if (unsoldClips == 0)
+	{
+		console.log ("No rise");
+		return;
+	}
 
+	if (clipRate == 0)
+	{
+		lowerPrice();
+		return;
+	}
+
+	if ( unsoldClips  < (clipRate * 10) )
+	{
+		console.log("[PRICER] price raise: "  + (unsoldClips) + " vs " + clipRate*10);
+		raisePrice();
+	}
+	else
+	{
+		if (avgSales > clipRate)
+		{
+			console.log("[PRICER] avg sales > cliprate");
+			return;
+		}
+		else
+		{
+			console.log("[PRICER] price lower: "  + (unsoldClips) + " vs " + clipRate*10);
+			lowerPrice();
+		}
+	}
 
 	return;
-}, 2000);
+
+}, 1000);
 
 /**
  * STAGE 1 INVESTOR
  */
 //var stage1ProjectBuyList = [ 'projectButton1', 'projectButton3', 'projectButton4', 'projectButton5', 'projectButton6', 'projectButton7', 'projectButton8', 'projectButton9', 'projectButton10', 'projectButton10b', 'projectButton11','projectButton12', 'projectButton13', 'projectButton14', 'projectButton15', 'projectButton16', 'projectButton17', 'projectButton19','projectButton20', 'projectButton21', 'projectButton22','projectButton23', 'projectButton24', 'projectButton25', 'projectButton26', 'projectButton27', 'projectButton28', 'projectButton29', 'projectButton30', 'projectButton31', 'projectButton34', 'projectButton40', 'projectButton40b','projectButton42', 'projectButton50', 'projectButton51', 'projectButton60', 'projectButton61', 'projectButton62', 'projectButton63', 'projectButton64', 'projectButton65', 'projectButton66', 'projectButton70', 'projectButton119'];
 var stage1ProjectBuyList = [ 'project1', 'project3', 'project4', 'project5', 'project6', 'project7', 'project8', 'project9', 'project10', 'project10b', 'project11','project12', 'project13', 'project14', 'project15', 'project16', 'project17', 'project19','project20', 'project21', 'project22','project23', 'project24', 'project25', 'project26', 'project27', 'project28', 'project29', 'project30', 'project31', 'project34', 'project40', 'project40b','project42', 'project50', 'project51', 'project60', 'project61', 'project62', 'project63', 'project64', 'project65', 'project66', 'project70', 'project119'];
-var stage1HighPriorityList = [ 	{ projID: 'project26', projRequirement: 10000, projRequirementType: "ops" },
-								{ projID: 'project3', projRequirement: 1000, projRequirementType: "ops" },
-								{ projID: 'project50', projRequirement: 10000, projRequirementType: "ops" } ];
+var stage1HighPriorityList = [ { projID: 'project26', projRequirement: 10000, projRequirementType: "ops" }  ];
 var stage1ProjectEndList = [ 'projectButton35']; // this needs to be a button string because of the way we check for end conditions
 var cfg_disableInvestor = true;
 if (typeof investor !== 'undefined')
@@ -191,16 +153,16 @@ var investor = setInterval(function() {
 	{
 		if (proj.projRequirementType == "ops")
 		{
-			if (memory*1000 >= proj.projRequirement) //  wait until we have reached the min # of ops needed to reach this target 
+			if (operations >= proj.projRequirement)
 			{
-				//println(proj);
-				//println("Looking at " + proj.projID);
+				println(proj);
+				println("[STAGE1 PROJ] Looking at " + proj.prodID);
 				
 				// Find the actual project object and update it
 				var prj = window[proj.projID];
 				prj.priority = 1;
 
-				//console.log("Priority: " + prj.priority);
+				console.log("Priority: " + prj.priority);
 
 				if (prj.element === null || prj.flag == 1)
 					continue;
@@ -217,64 +179,87 @@ var investor = setInterval(function() {
 	//for (let projectBuy of stage1ProjectBuyList)
 	for (let projectBuy of activeProjects)
 	{
-		if (projectsDiv.style.display === "none") // div not yet visible, no projects - STAGE 1 ONLY
-			continue;
+		// If this element is in our End List
+		// FIXME: this section has to fire first, otherwise if it's processed below it won't trigger the end-game bits
+		if (stage1ProjectEndList.indexOf(projectBuy.id) !== -1)
+		{
+			// .. and we can afford it, let's clear this stage and move on. 
+			if ( projectBuy.cost() )
+			{
+				projectBuy.effect();
+				cfg_disableDroneManager = false; // enable the drone manager
+				clearInterval(investor); // disable the investor interval
+				clearInterval(clicker);
+				clearInterval(pricer);
+				clearStage1Graphs();
+
+				initGraphs(2).then(result => stage2Graphs()).then(resolve=>loadStage2Graphs());
+				return;			
+			}
+		}
 
 		//println("[INVESTOR] projectBuy: " +  prj.title);
-		// If we're NOT in the list of pre-approved projects AND we're NOT in the list of end projects, let's skip
-		if (stage1ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1 && (stage1ProjectEndList.indexOf(projectBuy.id) == -1) )
+		// if we're not in the list of pre-approved projects, let's skip
+		if (stage1ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1)
+		{
 			continue;  
+		}
 
 		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
 		if (highPriorityActiveProject == true)
 		{
-			if ( projectBuy.priority !== 1)
+			if ( projectBuy.priority != 1)
 			{
 				println("[INVESTOR] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
 				continue;
 			}
 		}
 
+		console.log("Checking " + projectBuy.id);
 
-		// If this element is in our End List
-		// FIXME: this section has to fire first, otherwise if it's processed below it won't trigger the end-game bits
-		if (stage1ProjectEndList.indexOf(projectBuy.id) >= 0)
-		{
-			// .. and we can afford it, let's clear this stage and move on. 
-			if ( projectBuy.cost() )
-			{
-				console.log("[INVESTOR] END OF GAME RELEASE THE HYPNODRONES");
-				cfg_disableDroneManager = false; // enable the drone manager
-				clearInterval(investor); // disable the investor interval
-				clearInterval(clicker);
-				clearInterval(pricer);
-				clearStage1Graphs();
-				initGraphs(2).then(resolve => stage2Graphs()).then(resolve=>loadStage2Graphs());
 
-				projectBuy.effect();
-				return;			
-			}
-		}
-		else
-		{
-			//println("[INVESTOR] projectBuy not in end list '" +  projectBuy.title + "' / " + projectBuy.id)
-		}	
 
 		if ( projectBuy.cost() )
 		{
-			println("[INVESTOR] projectBuy - buying '" +  projectBuy.title + "' / " + projectBuy.id)
+			println("[INVESTOR] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
 			projectBuy.effect();
 			break; // FIXME: multiple of these running in a row and the cost() fails to restrict it from buying. Probably another function call to recalculate missing.
 		}
 		else
 		{
-			//println("[INVESTOR] projectBuy - can't afford '" +  projectBuy.title + "' / " + projectBuy.id)
+			println("[INVESTOR] projectBuy - can't afford " +  projectBuy.title + " / " + projectBuy.id)
 		}		
 	}
 
 	/**
-	 * FULL MONOPOLY
+	 * STAGE ENDS
 	 */
+	/*
+	for (let projectBuy of stage1ProjectEndList) // assume this array will only ever have one element for now (lazy)
+	{
+		if (typeof document.getElementById(projectBuy) !== "undefined" && document.getElementById(projectBuy) !== null)
+		{
+			projectObj = document.getElementById(projectBuy);		
+
+			if (projectObj.disabled == true)
+			{
+				tmpProjectBuys = tmpProjectBuys + " | " + projectBuy;
+			}
+			else if (projectObj.disabled == false)
+			{
+				println("[INVESTOR] END GAME! Getting " + projectBuy + "");
+				cfg_disableDroneManager = false; // enable the drone manager
+				clearInterval(investor); // disable the investor interval
+				clearInterval(clicker);
+				clearInterval(pricer);				
+				projectObj.click();
+
+				return; // skip further processing, we're done here
+			}
+		}
+	}
+	*/
+
 	if (typeof projectButton38 !== "undefined" && projectButton38.disabled == true && portTotal+funds >= 8500000) // was 7m, way too early
 	{
 		println("[INVESTOR] Mid game: stockpiling for Full Monopoly");
@@ -337,9 +322,10 @@ var investor = setInterval(function() {
 	}
 
 
+	var buyStr = "";
 	if (wire == 0)  // FIXME this isn't great
 	{ 
-		println("[INVESTOR] Buying 3x wire");
+		buyStr = buyStr + "3x wire";
 
 		if (wireCost*3 < funds)
 			for ($i = 0; $i < 3; $i++)
@@ -349,7 +335,7 @@ var investor = setInterval(function() {
 	} 
 	else if (wire < 2000) 
 	{ 
-		println("[INVESTOR] Buying 1x wire");
+		buyStr = buyStr + "1x wire";
 		buyWire(); 
 
 		if (clips > 500000000)
@@ -375,14 +361,12 @@ var investor = setInterval(function() {
 		{
 			println("[INVESTOR] Plenty of spare bankroll, making a withdrawal to buy MEGAclippers while we have < 100 of them");
 			investWithdraw();
-			println("[INVESTOR] Buying MEGAclipper");
 			makeMegaClipper();
 			investDeposit();
 		}
-
-		if (megaClipperCost < funds && unsoldClips < 2000000 ) // FIXME: this needs to be better coupled with the check in buyAds below
+		if (megaClipperCost < funds)
 		{
-			println("[INVESTOR] Buying MEGAclipper");
+			buyStr = buyStr + "MEGAclipper";
 			makeMegaClipper();
 		}
 	}
@@ -392,25 +376,23 @@ var investor = setInterval(function() {
 	}
 	else if (clipperCost < funds && (funds > 200 || clipperCost < 20) && clipperCost < adCost*0.25) // 25% ad cost should help speed up early levels by getting some quick adbuys
 	{
-		println("[INVESTOR] Buying clippers");
+		buyStr = buyStr + "clipper";
 		makeClipper();
 	}
 
 	if (adCost < funds)
 	{
-		if (marketingLvl < 15 || portTotal+funds > adCost*5 ) // at 14, it costs $819,200, so it's getting expensive
+		if (marketingLvl < 15 || portTotal > adCost*5 ) // at 14, it costs $819,200, so it's getting expensive
 		{
-			println("[INVESTOR] Buying ads");
+			buyStr = buyStr + "marketing";
 			buyAds();
 		}
 		else if (marketingLvl < 4)
 		{
-			println("[INVESTOR] Buying ads");
 			buyAds();
 		}
 		else if (adCost*4 < funds)
 		{
-			println("[INVESTOR] Buying ads");
 			buyAds();
 		}
 		else
@@ -418,26 +400,11 @@ var investor = setInterval(function() {
 			println("[INVESTOR] Can afford marketing, but not buying it...?");
 		}
 	}
-	else
-	{
-		// If adCost > funds, maybe we need to think about saving for some ads?
-		if (marketingLvl < 15 && unsoldClips > 2000000)
-		{
-			console.log("[INVESTOR] Marketing under lvl 15 & lots of unsold clips, saving to buy ads");
-			if (adCost < portTotal+funds)
-			{
-				investStratElement.selectedIndex = 0;
-				investWithdraw();
-			}
-			else
-			{
-				investStratElement.selectedIndex = 2;
-				investDeposit();
-			}
-			return;
-		}
-	}
 
+	if (buyStr == "")
+		buyStr = "nothing!";
+
+	println("[INVESTOR] Buying " + buyStr);
 	// https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
 	if (getComputedStyle(document.getElementById("investmentEngine")).display == "none")
 	{
@@ -460,14 +427,14 @@ var investor = setInterval(function() {
 		}
 		else
 		{
-			println("[INVESTOR] Depositing " + Math.round(funds));
+			println("[INVESTOR] Depositing " + funds); 
 			investDeposit(); 
 			if (investLevel > 4)
 				investStratElement.selectedIndex = 2; // Set to High Risk
 			else if (investLevel > 2)
 				investStratElement.selectedIndex = 1; // Set to Medium Risk
 			else
-				investStratElement.selectedIndex = 0; // Set to Low Risk
+				investStratElement.selectedIndex = 0; // Set to Medium Risk
 		}
 	}
 
@@ -536,7 +503,7 @@ var quantum = setInterval(function()
 		/*println("[QUANTUM] Quantuming: " + qChip0.value);*/
 		qComp();
 	}
-}, 100);
+}, 10);
 
 /*
  * STRATEGIC MODELLING - YOMIIIIIIIIIIIIIIIII
@@ -626,7 +593,7 @@ var droneManager = setInterval(function() {
 
 		if (slider.value < 190)
 		{
-			//println("[DRONE] Slider at " + slider.value);
+			println("[DRONE] Slider at " + slider.value);
 			slider.value = Number(slider.value) + 10;
 		}
 		else
@@ -653,10 +620,10 @@ var droneManager = setInterval(function() {
 	{
 		if (proj.projRequirementType == "ops")
 		{
-			if (memory*1000 >= proj.projRequirement)
+			if (operations >= proj.projRequirement)
 			{
 				println(proj);
-				println("Looking at " + proj.projID);
+				println("Looking at " + proj.prodID);
 				
 				// Find the actual project object and update it
 				var prj = window[proj.projID];
@@ -679,61 +646,73 @@ var droneManager = setInterval(function() {
 	//for (let projectBuy of stage2ProjectBuyList)
 	for (let projectBuy of activeProjects)
 	{
-		//println("[INVESTOR] projectBuy: " +  prj.title);
-		// if we're not in the list of pre-approved projects, let's skip
-		if (stage2ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1 && (stage2ProjectEndList.indexOf(projectBuy.id) === -1) )
-		{
-			println("[DRONE] projectBuy " +  projectBuy.title + " is not in our pre-approved list, skipping" + " / " + projectBuy.id);
-			continue;
-		}
-
-		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
-		if (highPriorityActiveProject == true)
-		{
-			if ( projectBuy.priority !== 1)
-			{
-				println("[DRONE] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
-				continue;
-			}
-		}
-
 		// If this element is in our End List
 		// FIXME: this section has to fire first, otherwise if it's processed below it won't trigger the end-game bits
 		if (stage2ProjectEndList.indexOf(projectBuy.id) !== -1)
 		{
 			// .. and we can afford it, let's clear this stage and move on. 
-			println("[DRONE] Trying to buy project " +  projectBuy.title + " " + " / " + projectBuy.id);
 			if ( projectBuy.cost() )
 			{
+				projectBuy.effect();
 				cfg_disableDroneManager = true;
 				cfg_disableProbeLauncher = false;
 				cfg_disableProbesManager = false;
 				clearInterval(droneManager);
 				clearStage2Graphs();
-				initGraphs(3).then(result => stage3Graphs()).then(resolve=>loadStage3Graphs());
 
-				println("[DRONE] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
-				projectBuy.effect();
-				manageProjects();
-	
+				initGraphs(3).then(result => stage3Graphs()).then(resolve=>loadStage3Graphs());
 				return;			
+			}
+		}
+
+		//println("[INVESTOR] projectBuy: " +  prj.title);
+		// if we're not in the list of pre-approved projects, let's skip
+		if (stage2ProjectBuyList.indexOf(projectBuy.id.replace("Button","")) == -1)
+			continue;
+
+		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
+		if (highPriorityActiveProject == true)
+		{
+			if ( projectBuy.priority != 1)
+			{
+				println("[INVESTOR] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
+				continue;
 			}
 		}
 
 		if ( projectBuy.cost() )
 		{
-			println("[DRONE] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
+			println("[INVESTOR] projectBuy - buying " +  projectBuy.title + " / " + projectBuy.id)
 			projectBuy.effect();
-			manageProjects();
 			break; // FIXME: multiple of these running in a row and the cost() fails to restrict it from buying. Probably another function call to recalculate missing.
 		}
 		else
 		{
-			println("[DRONE] projectBuy - can't afford " +  projectBuy.title + " / " + projectBuy.id)
+			println("[INVESTOR] projectBuy - can't afford " +  projectBuy.title + " / " + projectBuy.id)
 		}		
 	}
 
 	/*
+	for (let projectBuy of stage2ProjectBuyList)
+	{
+		if (typeof document.getElementById(projectBuy) !== "undefined" && document.getElementById(projectBuy) !== null)
+		{
+			projectObj = document.getElementById(projectBuy);		
+
+			if (projectObj.disabled == true)
+			{
+				println("[DRONE] Waiting for " + projectBuy + " to get started");
+				//return;
+			}
+			else if (projectObj.disabled == false)
+			{
+				println("[DRONE] Getting " + projectBuy + "");
+				projectObj.click();
+				break;
+			}
+		}
+	}
+
 	for (let projectBuy of stage2ProjectEndList)
 	{
 		if (typeof document.getElementById(projectBuy) !== "undefined" && document.getElementById(projectBuy) !== null)
@@ -773,12 +752,7 @@ var droneManager = setInterval(function() {
 
 	var droneMultiplier = 1;
 
-	if ( (harvesterCost + wireDroneCost) * 10000 < (unusedClips - unusedClips/10)) // technically cheating but just to speed things up from having to write my own buying function
-	{
-		droneMultiplier = 10000;
-		println("[DRONE] Drone Multiplier changed to " + droneMultiplier + ", plenty of spare clips");
-	}
-	else if ( (harvesterCost + wireDroneCost) * 1000 < (unusedClips - unusedClips/10))
+	if ( (harvesterCost + wireDroneCost) * 1000 < (unusedClips - unusedClips/10))
 	{
 		droneMultiplier = 1000;
 		println("[DRONE] Drone Multiplier changed to " + droneMultiplier + ", plenty of spare clips");
@@ -875,13 +849,10 @@ var droneManager = setInterval(function() {
 		makeFactory();
 		if (availableMatter == 0) // If we're at the end game, stock up on factories
 		{
-			for (let i = 0; i < 10; i++)
+			while (factoryCost < unusedClips)
 			{
-				if (factoryCost < unusedClips)
-				{
-					console.log("[DRONE] Bulk buying factories!!! " + i)
-					makeFactory();
-				}
+				console.log("[DRONE] Bulk buying factory!!!")
+				makeFactory();
 			}
 		}
 	}
@@ -1027,7 +998,7 @@ var probeMode = "";
 var lastProbeMode = "";
 //var stage3ProjectBuyList = [ 'projectButton120', 'projectButton121', 'projectButton128', 'projectButton129', 'projectButton130', 'projectButton131', 'projectButton132', 'projectButton133', 'projectButton134', 'projectButton218' ];
 var stage3ProjectBuyList = [ 'project120', 'project121', 'project128', 'project129', 'project130', 'project131', 'project132', 'project133', 'project134', 'project218' ];
-var stage3HighPriorityList = [ { projID: 'project132', opsRequirement: 250000, creatRequirement:125000,clipsRequirement:Math.pow(10,30)*50 } ];
+var stage3HighPriorityList = [];
 
 if (typeof probesManager !== 'undefined')
 	clearInterval(probesManager);
@@ -1071,76 +1042,36 @@ var probesManager = setInterval(function()
 		synchSwarm(); 
 	}
 
-	if (entertainButtonDiv.style.display !== "none" && btnEntertainSwarm.disabled == false && creativity > 50000) 
-	{
-		println("[DRONE] Swarm needs entertainment, fixing");
-		entertainSwarm(); 
-	}	
-
-
 	// Look through the list of high priority projects; if any are here and the conditions are right, mark them HP
 	var highPriorityActiveProject = false;
 	for (let proj of stage3HighPriorityList)
 	{
-		// If one project is already flagged as HP we can ignore the rest
-		//if (highPriorityActiveProject == true)
-		//	continue;
-
-		var prj = window[proj.projID];
-
-		/*// If the priority flag is already set AND the flag is zero AND it's not in the list of activeProjects
-		if (prj.priority == 1 && prj.flag == 0 && activeProjects.indexOf(prj) !== -1)
+		if (proj.projRequirementType == "ops")
 		{
-			println("[PROBES] Project " + prj.id + " (" + prj.title + ") already marked high priority, continuing");
-			highPriorityActiveProject = true;
-			continue;
-		}
-		*/
-
-		if (proj.opsRequirement !== undefined)
-		{
-			// If our base operations count is enough so that's it's possible to achieve, we can flag it as OK
-			if (memory*1000 >= proj.opsRequirement)
+			if (operations >= proj.projRequirement)
 			{
-				println("============= Looking at " + proj.projID);
+				println(proj);
+				println("Looking at " + proj.prodID);
 				
 				// Find the actual project object and update it
-				
+				var prj = window[proj.projID];
 				prj.priority = 1;
 
-				console.log("============= Priority: " + prj.priority);
+				console.log("Priority: " + prj.priority);
 
 				if (prj.element === null || prj.flag == 1)
 					continue;
 				else
 				{
-					println("============= HIGH PRIORITY PROJECT " + proj.projID);
+					//println("HIGH PRIORITY PROJECT " + proj.projID);
 					highPriorityActiveProject = true;
 				}
 			}
 		}
-
-		if (proj.creatRequirement !== undefined)
-		{
-			if (creativity > proj.creatRequirement*2 ) 
-			{
-				println("[PROBES] Surplus creat, so we can disable HP for now");
-				highPriorityActiveProject = false;
-			}
-			else
-				println("[PROBES] No surplus creat");
-		}
-
-		if (proj.clipsRequirement !== undefined)
-		{
-			if (proj.clipsRequirement) 
-			{}
-		}
-
-
 	}
 
 	// Now actually let's buy stuff
+	//for (let projectBuy of stage3ProjectBuyList)
 	for (let projectBuy of activeProjects)
 	{
 		//println("[INVESTOR] projectBuy: " +  prj.title);
@@ -1151,7 +1082,7 @@ var probesManager = setInterval(function()
 		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
 		if (highPriorityActiveProject == true)
 		{
-			if ( projectBuy.priority !== 1)
+			if ( projectBuy.priority != 1)
 			{
 				println("[PROBES] projectBuy " +  projectBuy.title + " is not a priority project, skipping" + " / " + projectBuy.id);
 				continue;
@@ -1162,7 +1093,6 @@ var probesManager = setInterval(function()
 		// FIXME: this section has to fire first, otherwise if it's processed below it won't trigger the end-game bits
 		if (stage3ProjectBuyList.indexOf(projectBuy.id) !== -1)
 		{
-			println("[PROBES] Trying to buy " +  projectBuy.title + " " + " / " + projectBuy.id);
 			// .. and we can afford it, let's clear this stage and move on. 
 			if ( projectBuy.cost() )
 			{
@@ -1190,7 +1120,43 @@ var probesManager = setInterval(function()
 		return b.priority - a.priority;
 	});*/
 
+	// first loop through projects and see if there is a high priority one that requires us to suspend buying low pri ones
+	var highPriorityActiveProject = false;
 
+	for (let projectBuy of stage3ProjectBuyList)
+	{
+		if (projectBuy.priority == 1)
+		{
+			highPriorityActiveProject = true;
+		}
+	}
+
+	// Now actually let's buy stuff
+	for (let projectBuy of stage3ProjectBuyList)
+	{
+		// If we have a high priority project, we need to check to see if this is one of them. If not we might as well skip it. 
+		if (highPriorityActiveProject == true)
+		{
+			if (projectBuy.priority != 1)
+			{
+				println("[PROBES] projectBuy " + projectBuy.title + " is not a priority project, skipping");
+				continue;
+			}
+		}
+
+		if (typeof projectBuy.id !== 'undefined') // FIXME: sometimes we end up with no projects here & the cost() call below fails
+		{
+			if (projectBuy.cost())
+			{
+				println("[PROBES] projectBuy - buying" + projectBuy.title)
+				projectBuy.effect();
+			}
+			else
+			{
+				println("[PROBES] projectBuy - can't afford " + projectBuy.title)
+			}
+		}
+	}
 
 	// probeUsedTrust - amount of trust used
 	// probeTrust - amount of trust available
@@ -1299,32 +1265,6 @@ var probesManager = setInterval(function()
 	}
 	else if (probeCount <= 80000000)
 	{
-		var probeMode = "20m-80m-new-meta";
-		if (checkProbeModeChange(probeMode) == false)
-			return;
-		resetAllProbes();
-		println("[PROBES] 20m-80m probes! New meta");
-
-		resetAllProbes();
-		let ratioTotal = 23;
-		targetSpeed = Math.floor(4  * (probeTrust / ratioTotal));
-		targetNav = Math.floor(0 * (probeTrust / ratioTotal));
-		targetRep = Math.floor(9 * (probeTrust / ratioTotal));
-		targetHaz = Math.floor(7 * (probeTrust / ratioTotal));
-		targetFac = Math.floor(0  * (probeTrust / ratioTotal));
-		targetWire = Math.floor(0  * (probeTrust / ratioTotal));
-		targetHarv = Math.floor(0  * (probeTrust / ratioTotal));
-		targetCombat = Math.floor(3  * (probeTrust / ratioTotal));
-
-		setProbeValue('Speed', targetSpeed);
-		setProbeValue('Nav', targetNav);
-		setProbeValue('Rep', targetRep);
-		setProbeValue('Haz', targetHaz);
-		setProbeValue('Fac', targetFac);
-		setProbeValue('Harv', targetHarv);
-		setProbeValue('Wire', targetWire);
-		setProbeValue('Combat', targetCombat);			
-		/*
 		if (drifterCount < probeCount / 2)
 		{
 			var probeMode = "20m-80m-boost-farming-combat";
@@ -1414,7 +1354,7 @@ var probesManager = setInterval(function()
 			setProbeValue('Wire', 1);
 			setProbeValue('Speed', 2);
 			setProbeValue('Nav', 2);
-		}*/
+		}
 		assignSpareTrust();
 		return;
 		/* // Saving the day formula
@@ -1496,7 +1436,7 @@ var probesManager = setInterval(function()
 
 		// 1:2 Speed/Nav seems best ratio for fastest exploration
 		targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
-		targetNav = Math.floor(5 * (probeTrust / ratioTotal));
+		targetNav = Math.floor(6 * (probeTrust / ratioTotal));
 		targetRep = Math.floor(10  * (probeTrust / ratioTotal));
 		targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
 		targetFac = Math.floor(1 * (probeTrust / ratioTotal));
@@ -1528,15 +1468,15 @@ var probesManager = setInterval(function()
 	}
 	else if (drifterCount < probeCount && probeCount >= 1000000000000000) // 1 quadrillion. FIXME maybe can do this earlier?
 	{
-		// 1:2 Speed/Nav seems best ratio for fastest exploration
+		var probeMode = "1q-stable-explore-combat";
+		if (checkProbeModeChange(probeMode) == false)
+			return;
+
+		resetAllProbes();
+			// 1:2 Speed/Nav seems best ratio for fastest exploration
 		if (acquiredMatter > 0) // if we have a buildup of matter
 		{
-			var probeMode = "1q-stable-explore-combat-too-much-matter";
-			if (checkProbeModeChange(probeMode) == false && Math.random() < 0.10) // randomly update late game
-				return;
-	
-			resetAllProbes();
-				println("MATTER MODE!!!");
+			println("MATTER MODE!!!");
 			let ratioTotal = 34;
 			targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
 			targetNav = Math.floor(6 * (probeTrust / ratioTotal));
@@ -1556,22 +1496,39 @@ var probesManager = setInterval(function()
 			setProbeValue('Wire', targetWire);
 			setProbeValue('Combat', targetCombat);
 		}
+		else if (wire > Math.pow(2, 32))
+		{
+			println("TOO MUCH WIRE: " + acquiredMatter);
+			let ratioTotal = 31;
+			targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
+			targetNav = Math.floor(5 * (probeTrust / ratioTotal));
+			targetRep = Math.floor(10  * (probeTrust / ratioTotal));
+			targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
+			targetFac = 1;
+			targetWire = 0;
+			targetHarv = 0;
+			targetCombat = Math.floor(3 * (probeTrust / ratioTotal));
+	
+			setProbeValue('Speed', targetSpeed);
+			setProbeValue('Nav', targetNav);
+			setProbeValue('Rep', targetRep);
+			setProbeValue('Haz', targetHaz);
+			setProbeValue('Fac', targetFac);
+			setProbeValue('Harv', targetHarv);
+			setProbeValue('Wire', targetWire);
+			setProbeValue('Combat', targetCombat);
+		}
 		else
 		{
-			var probeMode = "1q-stable-explore-combat-no-matter";
-			if (checkProbeModeChange(probeMode) == false && Math.random() < 0.10) // randomly update late game
-				return;
-	
-			resetAllProbes();
-	
-			let ratioTotal = 34;
+			println("Acquired Matter is: " + acquiredMatter);
+			let ratioTotal = 31;
 			targetSpeed = Math.floor(4 * (probeTrust / ratioTotal));
 			targetNav = Math.floor(6 * (probeTrust / ratioTotal));
 			targetRep = Math.floor(10  * (probeTrust / ratioTotal));
 			targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
-			targetFac = Math.floor(1 * (probeTrust / ratioTotal));
-			targetWire = Math.floor(1 * (probeTrust / ratioTotal));
-			targetHarv = Math.floor(1 * (probeTrust / ratioTotal));
+			targetFac = 0;
+			targetWire = 0;
+			targetHarv = 0;
 			targetCombat = Math.floor(3 * (probeTrust / ratioTotal));
 	
 			setProbeValue('Speed', targetSpeed);
@@ -1623,35 +1580,6 @@ var probesManager = setInterval(function()
 		println("========================================================");
 		println("[PROBES] NO PROBE RULES TO MATCH THIS SCENARIO???!!!")
 		println("========================================================");
-		var probeMode = "fallback-mode";
-		if (checkProbeModeChange(probeMode) == false)
-			return;
-
-		resetAllProbes();
-		let ratioTotal = 34;
-
-		// 1:2 Speed/Nav seems best ratio for fastest exploration
-		targetSpeed = Math.floor(5 * (probeTrust / ratioTotal));
-		targetNav = Math.floor(3 * (probeTrust / ratioTotal));
-		targetRep = Math.floor(10  * (probeTrust / ratioTotal));
-		targetHaz = Math.floor(8 * (probeTrust / ratioTotal));
-		targetFac = Math.floor(1 * (probeTrust / ratioTotal));
-		targetWire = Math.ceil(1 * (probeTrust / ratioTotal));
-		targetHarv = Math.ceil(1 * (probeTrust / ratioTotal));
-		targetCombat = Math.floor(5 * (probeTrust / ratioTotal));
-
-		setProbeValue('Speed', targetSpeed);
-		setProbeValue('Nav', targetNav);
-		setProbeValue('Rep', targetRep);
-		setProbeValue('Haz', targetHaz);
-		setProbeValue('Fac', targetFac);
-		setProbeValue('Harv', targetHarv);
-		setProbeValue('Wire', targetWire);
-		setProbeValue('Combat', targetCombat);
-
-		assignSpareTrust();
-		return;		
-
 	}
 	//if (combatButtonDiv.style.display !== "none")
 }, 4000);
@@ -1677,7 +1605,7 @@ function assignSpareTrust()
 {
 	let spareTrust = probeTrust - getProbeUsedTrust();
 		
-	//println("[SPARETRUST] Spare trust is: " + spareTrust);
+	println("[SPARETRUST] Spare trust is: " + spareTrust);
 
 	let rotateTrust = [ 'Rep', 'Haz', 'Speed' ];
 
@@ -1718,13 +1646,11 @@ function checkProbeModeChange(probeMode)
 	{
 		println("[PROBES] Still in mode: " + probeMode + ", returning, no need for changes; assigning spare trust");
 		lastProbeMode = probeMode;
-
-		/*if (Math.random() < 0.1) // randomly change the mode to check to see if we need to re-adjust the 
+		if (Math.random() < 0.1) // randomly change the mode to check to see if we need to re-adjust the 
 		{
 			println("[PROBES] Forcing a mode change to check on stuff");
 			return true;
 		}
-		*/
 		assignSpareTrust();
 		return false; 
 	}
@@ -1776,8 +1702,6 @@ function setProbeValue(field, target)
 			tmpct = tmpct + 1;
 			if (tmpct > 20)
 			{
-				// this should never happen, left in for legacy testing reasons
-				println("============================================================"); 
 				println("[SETVALUE] BREAKING, LOWER tmpct limit hit");
 				break;
 			}				
@@ -1828,8 +1752,7 @@ if (project46.flag == 0 && project35.flag == 0)
 	cfg_disableProbeLauncher = true;
 	cfg_disableProbesManager = true;
 
-	clearAllGraphs();
-	initGraphs(1).then(resolve => stage1Graphs()).then(resolve => loadStage1Graphs());
+	initGraphs(1).then(result => loadStage1Graphs());
 }
 else if (project35.flag == 1 && project46.flag !== 1)
 {
@@ -1841,10 +1764,11 @@ else if (project35.flag == 1 && project46.flag !== 1)
 	cfg_disableModeling = false;
 	cfg_disableDroneManager = false;
 	cfg_disableProbeLauncher = true;
-	cfg_disableProbesManager = true;
+	cfg_disableProbesManager = true;	
+	clearStage1Graphs();
 
-	clearAllGraphs();
-	initGraphs(2).then(resolve => stage2Graphs()).then(resolve=>loadStage2Graphs());
+	initGraphs(2).then(result => stage2Graphs()).then(resolve=>loadStage2Graphs());
+
 }
 else if (project46.flag == 1)
 {
@@ -1857,11 +1781,685 @@ else if (project46.flag == 1)
 	cfg_disableDroneManager = true;
 	cfg_disableProbeLauncher = false;
 	cfg_disableProbesManager = false;	
+	clearStage2Graphs();
 
-	clearAllGraphs();
-	initGraphs(3).then(resolve => stage3Graphs()).then(resolve=>loadStage3Graphs());
+	//initGraphs(3).then(result => stage3Graphs()).then(resolve=>loadStage3Graphs());
+	initGraphs(3).then(resolve=>loadStage3Graphs());
+
 }
 else
 {
 	println("============== ERROR NO CONFIG SET ==============");
+}
+
+
+/**
+ * GRAPHING STUFF
+ */
+
+//https://jsfiddle.net/0h1z72s0/
+//http://jsfiddle.net/api/post/jquery/1.4/
+
+/** INIT */
+var graphLibLoaded = false;
+function initGraphs(stage)
+{
+  console.log("== INIT GRAPHS STAGE: " + stage);
+  if (graphLibLoaded == true)
+  {
+    console.log("== GRAPHLIB ALREADY LOADED - RETURNING IMMEDIATELY");
+    return new Promise(function(resolve,reject) { resolve(true); });
+  }
+
+  return new Promise(function(resolve,reject)
+  {
+    if (graphLibLoaded == true)
+      resolve(true);
+    var j = document.createElement('script'); 
+    j.src = "https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"; 
+    document.getElementsByTagName('head')[0].appendChild(j);
+    
+    j.onload = function() {
+      graphLibLoaded = true;
+      console.log("LOADED graphs");
+      if (stage === 1)
+        stage1Graphs();
+      else if (stage == 2)
+        stage2Graphs();
+      else if (stage == 3)
+        stage3Graphs();
+
+      var fileref = document.createElement("link");
+      fileref.rel = "stylesheet";
+      fileref.type = "text/css";
+      fileref.href = "https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css";
+      document.getElementsByTagName("head")[0].appendChild(fileref);
+
+      graphLibLoaded = true;
+      resolve(true);
+    }
+
+    j.onerror = function() {
+      console.log("ERROR occurred loading graph scripts");
+      reject(false);
+    }
+  });
+}
+
+function fixGraphBackground() 
+{
+	var x = document.getElementsByTagName("canvas");
+	var i;
+	for (i = 0; i < x.length; i++) 
+	{
+		x[i].style.background = "0,0,0";
+	}
+}
+/** END INIT */
+
+function stage1Graphs()
+{
+  console.log("================ DIVS FOR STAGE 1 GRAPHS ================");
+  if (document.getElementById('graphClipsRateDiv') !== null)
+    return;
+
+  return new Promise(function(resolve,reject)
+  {
+    var graphClipsRate = document.createElement('div'); 
+    graphClipsRate.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
+    graphClipsRate.id = "graphClipsRateDiv";
+    document.body.appendChild(graphClipsRate); 
+
+    // INVESTMENT PORTFOLIO
+    var graphInvestments = document.createElement('div'); 
+    graphInvestments.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
+    graphInvestments.id = "graphInvestmentsDiv";
+    document.body.appendChild(graphInvestments); 
+
+    var graphYomi = document.createElement('div'); 
+    graphYomi.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
+    graphYomi.id = "graphYomiDiv";
+    document.body.appendChild(graphYomi); 
+
+    var graphRevenue = document.createElement('div'); 
+    graphRevenue.style = "position: absolute;right:510px;top:510px;border: solid 1px blue;width: 500px;height: 400px;"
+    graphRevenue.id = "graphRevenueDiv";
+    document.body.appendChild(graphRevenue); 
+
+    resolve(true);
+  });
+}
+
+
+function stage2Graphs()
+{
+	console.log("================ DIVS FOR STAGE 2 GRAPHS ================");
+	if (document.getElementById('graphDronesDiv') !== null)
+	{
+		println("== Divs for Stage 2 already loaded, skipping");
+		return;
+	}
+    
+    return new Promise(function(resolve,reject)
+    {
+      var graphDrones = document.createElement('div'); 
+      graphDrones.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
+      graphDrones.id = "graphDronesDiv";
+	  document.body.appendChild(graphDrones); 
+
+	  var graphMatterRate = document.createElement('div'); 
+      graphMatterRate.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
+      graphMatterRate.id = "graphMatterRateDiv";
+      document.body.appendChild(graphMatterRate); 
+
+	  var graphWireRate = document.createElement('div'); 
+      graphWireRate.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
+      graphWireRate.id = "graphWireRateDiv";
+      document.body.appendChild(graphWireRate); 
+
+      resolve(true);
+    });
+}
+
+function stage3Graphs()
+{
+	console.log("================ DIVS FOR STAGE 3 GRAPHS ================");
+	if (document.getElementById('graphProbesDiv') !== null)
+		return;
+
+    return new Promise(function(resolve,reject)
+    {
+      var graphProbes = document.createElement('div'); 
+      graphProbes.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
+      graphProbes.id = "graphProbesDiv";
+      document.body.appendChild(graphProbes); 
+
+      var graphExploration = document.createElement('div'); 
+      graphExploration.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
+      graphExploration.id = "graphExplorationDiv";
+      document.body.appendChild(graphExploration); 
+
+      var graphProbeRates = document.createElement('div'); 
+      graphProbeRates.style = "position: absolute;right:510px;top:510px;border: solid 1px blue;width: 500px;height: 400px;"
+      graphProbeRates.id = "graphProbeRatesDiv";
+      document.body.appendChild(graphProbeRates); 
+
+      resolve(true);
+    });
+}
+
+
+/* CLIPS STAGE 1  */
+function graphClipRates()
+{
+//  var x = await initGraphs();
+
+  if (typeof graphClipsRateInterval !== 'undefined')
+      clearInterval(graphClipsRateInterval);
+  var data = [];
+  var t = new Date();
+  data.push([t, 0, 0]);
+
+  var g = new Dygraph(document.getElementById("graphClipsRateDiv"), data,
+      {
+          title: "Clips and Wire Growth Rate",
+          drawPoints: true,
+          showRoller: true,
+          rollPeriod: 1,
+          labels: ['Time', 'ClipRate', 'WireRate']
+      });
+
+  var lastClips = clips;
+  var lastWire = wire;
+
+  graphClipsRateInterval = setInterval(function () {
+      var x = new Date();  // current time
+      
+      var diff = clips - lastClips;
+      lastClips = clips;
+
+      var wireDiff = wire - lastWire;
+      lastWire = wire;
+      if (wireDiff < 0) // Hack to stop negative values in graph
+          wireDiff = 0;
+
+      //console.log("[GRAPH] Rate is " + diff + "  " + clips + " - " + lastClips);
+
+      data.push([x, diff, wireDiff]);
+      if (data.length > 100) {
+          data.splice(0, 1);
+      }
+      g.updateOptions({ 'file': data });
+  }, 1000);
+  fixGraphBackground();
+}
+
+
+/**
+ * INVESTMENTS STAGE 1  
+ */
+function graphInvestments()
+{
+    if (typeof graphInvestmentsInterval !== 'undefined')
+        clearInterval(graphInvestmentsInterval);
+    var gidata = [];
+    var t = new Date();
+    gidata.push([t,0,0,0]);
+
+    var gInvestments = new Dygraph(document.getElementById("graphInvestmentsDiv"), gidata,
+        {
+            title: "Investments Growth",
+            drawPoints: true,
+            showRoller: true,
+            rollPeriod: 1,
+            labels: ['Time', 'Portfolio', 'Securities', 'Bankroll']
+        });
+
+    var lastPortfolio = portTotal;
+    var lastSecurities = secTotal;
+    var lastBankroll = bankroll;
+
+    graphInvestmentsInterval = setInterval(function () {
+        var x = new Date();  // current time
+        
+        /*var portDiff = portTotal - lastPortfolio;
+        lastPortfolio = portTotal;
+
+        var secDiff = secTotal - lastSecurities;
+        lastSecurities = secTotal;
+
+        var bankrollDiff = bankroll - lastBankroll;
+        lastBankroll = bankroll;
+        */
+        gidata.push([x, portTotal, secTotal, bankroll]);
+        if (gidata.length > 100) {
+            gidata.splice(0, 1);
+        }
+        gInvestments.updateOptions({ 'file': gidata });
+    }, 1000);
+    fixGraphBackground();
+}
+
+
+/**
+ * YOMI
+ */
+function graphYomi()
+{
+    if (typeof graphYomiInterval !== 'undefined')
+        clearInterval(graphYomiInterval);
+    var data2 = [];
+    var t2 = new Date();
+    data2.push([t2, 1, 1]);
+
+    var gYomi = new Dygraph(document.getElementById("graphYomiDiv"), data2,
+        {
+            title: "Yomi",
+            drawPoints: true,
+            showRoller: true,
+            rollPeriod: 1,
+            labels: ['Time', 'YomiRate', 'TotalYomi'],
+            valueRange: [0.0],
+        });
+
+    var lastYomi = yomi;
+
+    graphYomiInterval = setInterval(function () {
+        var x = new Date();  // current time
+
+        var yomiDiff = yomi - lastYomi;
+        //console.log("[GRAPH] Rate is " + yomiDiff + "  " + yomi + " - " + lastYomi);
+        lastYomi = yomi;
+
+        data2.push([x, yomiDiff, yomi]);
+        if (data2.length > 100) {
+            data2.splice(0, 1);
+        }
+        gYomi.updateOptions({ 'file': data2 });
+    }, 1000);
+    fixGraphBackground();
+}
+
+
+/**
+ * REVENUE
+ */
+
+function graphRevenue()
+{
+    if (typeof graphRevenueInterval !== 'undefined')
+        clearInterval(graphRevenueInterval);
+    var dataRev = [];
+    var t2 = new Date();
+    dataRev.push([t2, avgRev]);
+
+    var graphRevenue = new Dygraph(document.getElementById("graphRevenueDiv"), dataRev,
+        {
+            title: "Revenue",
+            drawPoints: true,
+            showRoller: true,
+            rollPeriod: 1,
+            labels: ['Time', 'AvgRevenue'],
+            valueRange: [0.0],
+        });
+
+    var lastYomi = yomi;
+
+    graphRevenueInterval = setInterval(function () {
+        var x = new Date();  // current time
+
+        dataRev.push([x, avgRev]);
+        if (dataRev.length > 100) {
+            dataRev.splice(0, 1);
+        }
+        graphRevenue.updateOptions({ 'file': dataRev });
+    }, 1000);
+    fixGraphBackground();
+}
+
+/**
+ *  GRAPH DRONES  
+ */
+function graphDrones()
+{
+  if (typeof graphDronesRateInterval !== 'undefined')
+      clearInterval(graphDronesRateInterval);
+  var gdrdata = [];
+  var t = new Date();
+  gdrdata.push([t, Math.random()]);
+
+  var gDrones = new Dygraph(document.getElementById("graphDronesDiv"), gdrdata,
+      {
+          title: "Activity",
+          drawPoints: true,
+          showRoller: true,
+          rollPeriod: 1,
+          labels: ['Time', 'ClipRate']
+      });
+
+  var lastClips = clips;
+
+  graphDronesRateInterval = setInterval(function () {
+      var x = new Date();  // current time
+      
+      var diff = clips - lastClips;
+      lastClips = clips;
+
+      //console.log("[GRAPH] Rate is " + diff + "  " + clips + " - " + lastClips);
+
+      gdrdata.push([x, clipRate]);
+      if (gdrdata.length > 100) {
+          gdrdata.splice(0, 1);
+      }
+      gDrones.updateOptions({ 'file': gdrdata });
+  }, 1000);
+  fixGraphBackground();
+}
+
+/**
+ *  GRAPH MATTER RATE
+ */
+function graphMatterRate()
+{
+	if (typeof graphMatterRateInterval !== 'undefined')
+		clearInterval(graphMatterRateInterval);
+		
+	var gdrdata = [];
+	var t = new Date();
+	gdrdata.push([t, Math.random()]);
+
+	var gDrones = new Dygraph(document.getElementById("graphMatterRateDiv"), gdrdata,
+		{
+			title: "Matter Rate",
+			drawPoints: true,
+			showRoller: true,
+			rollPeriod: 1,
+			labels: ['Time', 'MatterRate']
+		});
+
+	var lastClips = clips;
+  
+	graphMatterRateInterval = setInterval(function () {
+		var x = new Date();  // current time
+
+		if (availableMatter>0) 
+		{
+			var dbsth = 1;
+			if (droneBoost>1){
+				dbsth = droneBoost * Math.floor(harvesterLevel);
+			}	
+			var mtr = powMod*dbsth*Math.floor(harvesterLevel)*harvesterRate;
+	
+			mtr = mtr * ((200-sliderPos)/100);
+	
+			if (mtr>availableMatter){
+				mtr = availableMatter;
+			}
+		}
+		matterRate = mtr;
+	
+//		console.log("[GRAPH] Rate is " + matterRate);
+
+		gdrdata.push([x, matterRate]);
+		if (gdrdata.length > 100) {
+			gdrdata.splice(0, 1);
+		}
+		gDrones.updateOptions({ 'file': gdrdata });
+	}, 1000);
+	fixGraphBackground();
+}
+
+/**
+ *  GRAPH WIRE RATE
+ */
+function graphWireRate()
+{
+	if (typeof graphWireRateInterval !== 'undefined')
+		clearInterval(graphWireRateInterval);
+		
+	var gdrdata = [];
+	var t = new Date();
+	gdrdata.push([t, Math.random()]);
+
+	var gDrones = new Dygraph(document.getElementById("graphWireRateDiv"), gdrdata,
+		{
+			title: "Wire Rate",
+			drawPoints: true,
+			showRoller: true,
+			rollPeriod: 1,
+			labels: ['Time', 'WireRate']
+		});
+
+	graphWireRateInterval = setInterval(function () {
+		var x = new Date();  // current time
+
+		// FIXME: THIS IS NOT ACCURATE
+		//if (acquiredMatter>0) 
+		{
+			var dbstw = 1;
+			if (droneBoost>1){
+				dbstw = droneBoost * Math.floor(wireDroneLevel);
+				}
+			
+			var a = powMod*dbstw*Math.floor(wireDroneLevel)*wireDroneRate;
+			
+			a = a * ((200-sliderPos)/100);
+			
+			/*
+			if (a>acquiredMatter){
+				a = acquiredMatter;
+			}*/
+		}
+		//else
+		//	a = 0;
+
+		wireRate = a;
+	
+		console.log("[GRAPH] wireRate is " + wireRate);
+
+		gdrdata.push([x, wireRate]);
+		if (gdrdata.length > 100) {
+			gdrdata.splice(0, 1);
+		}
+		gDrones.updateOptions({ 'file': gdrdata });
+	}, 1000);
+	fixGraphBackground();
+}
+
+
+/* EXPLORATION   */
+function graphExploration()
+{
+  if (typeof graphExplorationInterval !== 'undefined')    
+    clearInterval(graphExplorationInterval);
+  var gexdata = [];
+  var t = new Date();
+  for (var i = 10; i >= 0; i--) {
+      var x = new Date(t.getTime() - i * 1000);
+      gexdata.push([x, Math.random()]);
+  }
+
+  var gExplored = new Dygraph(document.getElementById("graphExplorationDiv"), gexdata,
+      {
+          title: "Exploration Rate",
+          drawPoints: true,
+          showRoller: true,
+          rollPeriod: 1,
+          labels: ['Time', 'ExploredRate']
+      });
+
+  var lastPercentFound = (100/(totalMatter/foundMatter));
+
+  graphExplorationInterval = setInterval(function () {
+      var x = new Date();  // current time
+      
+      var diff = (100/(totalMatter/foundMatter)) - lastPercentFound;
+      lastPercentFound = (100/(totalMatter/foundMatter));
+
+      //console.log("[GRAPH] Rate is " + diff + "  " + clips + " - " + lastClips);
+
+      gexdata.push([x, diff]);
+      if (gexdata.length > 100) {
+          gexdata.splice(0, 1);
+      }
+      gExplored.updateOptions({ 'file': gexdata });
+  }, 1000);
+  fixGraphBackground();
+}
+
+/**
+ *  PROBES  
+ */
+function graphProbes()
+{
+    if (typeof graphProbesInt !== 'undefined')
+        clearInterval(graphProbesInt);
+    var gpdata = [];
+    var t = new Date();
+    gpdata.push([t, 0,0,0,0]);
+
+    var gProbes = new Dygraph(document.getElementById("graphProbesDiv"), gpdata,
+        {
+            title: "Total Probe Metrics",
+            drawPoints: true,
+            showRoller: true,
+            rollPeriod: 1,
+            labels: ['Time', 'HazardLosses', 'CombatLosses', 'DriftLosses', 'TotalProbes']
+        });
+    // It sucks that these things aren't objects, and we need to store state in window.
+    graphProbesInt = setInterval(function () {
+        var x = new Date();  // current time
+        var y = Math.random();
+        //gpdata.push([x, probesLostHaz / 1000000000000000, probesLostCombat / 1000000000000000, probesLostDrift / 1000000000000000, probeCount / 1000000000000000]);
+        gpdata.push([x, probesLostHaz , probesLostCombat , probesLostDrift , probeCount ]);
+        if (gpdata.length > 100) {
+            gpdata.splice(0, 1);
+        }
+        gProbes.updateOptions({ 'file': gpdata });
+    }, 1000);
+    fixGraphBackground();
+}
+
+function graphProbeRates()
+{    
+    /* PROBE RATES   */
+    if (typeof graphProbeRatesInterval !== 'undefined')
+        clearInterval(graphProbeRatesInterval);
+    var gprdata = [];
+    var t = new Date();
+    gprdata.push([t, 0,0,0]);
+
+    var gProbeRates = new Dygraph(document.getElementById("graphProbeRatesDiv"), gprdata,
+        {
+            title: "Probe change rates",
+            drawPoints: true,
+            showRoller: true,
+            rollPeriod: 1,
+            labels: ['Time', 'ProbeRate', 'HazardRate', 'CombatRate']
+        });
+
+    var lastHazards = probesLostHaz;
+    var lastCombat = probesLostCombat;
+    var lastProbes = probeCount;
+
+    graphProbeRatesInterval = setInterval(function () {
+        var x = new Date();  // current time
+        
+        var diffProbes = probeCount - lastProbes;
+        lastProbes = probeCount;
+        var diffHaz = probesLostHaz - lastHazards;
+        lastHazards = probesLostHaz;
+        var diffCombat = probesLostCombat - lastCombat;
+        lastCombat = probesLostCombat;
+
+        //console.log("[GRAPH] Rate is " + diff + "  " + clips + " - " + lastClips);
+
+        gprdata.push([x, diffProbes, diffHaz, diffCombat]);
+        if (gprdata.length > 100) {
+            gprdata.splice(0, 1);
+        }
+        gProbeRates.updateOptions({ 'file': gprdata });
+    }, 1000);
+    fixGraphBackground();
+}
+
+function clearStage1Graphs()
+{
+	clearIntervalSafe('graphClipsRateInterval');
+	clearIntervalSafe('graphInvestmentsInterval');
+	clearIntervalSafe('graphYomiInterval');
+	clearIntervalSafe('graphRevenueInterval');
+	clearDivSafe('graphClipsRateDiv');
+	clearDivSafe('graphInvestmentsDiv');
+	clearDivSafe('graphYomiDiv');
+	clearDivSafe('graphRevenueDiv');  
+}
+
+function loadStage1Graphs()
+{
+	graphClipRates();
+	graphInvestments();
+	graphYomi();
+	graphRevenue();
+}
+
+function clearStage2Graphs()
+{
+	clearIntervalSafe('graphDronesRateInterval');
+	clearDivSafe('graphDronesDiv');
+	clearDivSafe('graphMatterRateDiv');
+	clearDivSafe('graphWireRateDiv');
+}
+
+function loadStage2Graphs()
+{
+	graphDrones();
+	graphMatterRate();
+	graphWireRate();
+}
+
+function clearStage3Graphs()
+{
+	clearIntervalSafe('graphExplorationInterval');
+	clearIntervalSafe('graphProbesInt');
+	clearIntervalSafe('graphProbeRatesInterval');
+
+	clearDivSafe('graphExplorationDiv');
+	clearDivSafe('graphProbesDiv');
+	clearDivSafe('graphProbeRatesDiv');
+}
+
+function loadStage3Graphs()
+{
+	graphExploration();
+	graphProbes();
+	graphProbeRates();
+}
+
+function clearIntervalSafe(interval)
+{
+	if (typeof interval !== 'undefined')
+	{
+		console.log("Trying to clear interval: " + interval);
+	}
+	else
+	{
+		console.log("Interval not found: " + interval);
+	}
+}
+
+function clearDivSafe(div) 
+{
+	console.log("Checking div: " + div);
+
+	if (document.getElementById(div) !== null) 
+	{
+
+		console.log("Removing div: " + div);
+		document.getElementById(div).remove();
+	}
+	else 
+	{
+		console.log("Tried to remove div but it didn't exist: " + div);
+	}
 }
