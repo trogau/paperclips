@@ -1966,7 +1966,14 @@ function graphClipRates()
           drawPoints: true,
           showRoller: true,
           rollPeriod: 1,
-          labels: ['Time', 'ClipRate', 'WireRate']
+          labels: ['Time', 'ClipRate', 'WireRate'],
+          ylabel: 'Clip Rate',
+          y2label: 'Wire Rate',
+          series: {
+              'WireRate': {
+                  axis: 'y2'
+              }
+          }
       });
 
   var lastClips = clips;
