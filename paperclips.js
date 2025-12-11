@@ -2561,21 +2561,23 @@ function clearDivSafe(div)
 					knob.style.transform = 'translateX(0)';
 				}
 			}
-			updateSlider();
 
-			// Handle toggle change
-			checkbox.addEventListener('change', function() {
+			// Common toggle handler
+			function handleToggle() {
 				window[option.varName] = checkbox.checked;
 				updateSlider();
 				console.log('[CONTROL PANEL] ' + option.label + ' set to: ' + checkbox.checked);
-			});
+			}
+
+			updateSlider();
+
+			// Handle checkbox change
+			checkbox.addEventListener('change', handleToggle);
 
 			// Allow clicking on slider to toggle
 			slider.addEventListener('click', function() {
 				checkbox.checked = !checkbox.checked;
-				window[option.varName] = checkbox.checked;
-				updateSlider();
-				console.log('[CONTROL PANEL] ' + option.label + ' set to: ' + checkbox.checked);
+				handleToggle();
 			});
 
 			toggleContainer.appendChild(checkbox);
