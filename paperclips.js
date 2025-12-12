@@ -1871,16 +1871,32 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   width = width || 500;
   height = height || 400;
   
+  // Create outer wrapper for positioning
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position: absolute; right: ' + initialRight + 'px; top: ' + initialTop + 'px; ' +
+                          'z-index: 100;';
+  
+  // Create drag handle (title bar)
+  var dragHandle = document.createElement('div');
+  dragHandle.style.cssText = 'width: ' + width + 'px; height: 20px; ' +
+                             'background: ' + borderColor + '; ' +
+                             'cursor: move; ' +
+                             'user-select: none; ' +
+                             'opacity: 0.3; ' +
+                             'border: solid 1px ' + borderColor + ';';
+  
+  // Create the actual graph container
   var container = document.createElement('div');
   container.id = id;
-  container.style.cssText = 'position: absolute; right: ' + initialRight + 'px; top: ' + initialTop + 'px; ' +
-                            'width: ' + width + 'px; height: ' + height + 'px; ' +
+  container.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; ' +
                             'border: solid 2px ' + borderColor + '; ' +
-                            'z-index: 100; ' +
-                            'cursor: move; ' +
-                            'user-select: none;';
+                            'border-top: none;';
   
-  // Make the container draggable - each container has its own state
+  // Assemble the structure
+  wrapper.appendChild(dragHandle);
+  wrapper.appendChild(container);
+  
+  // Make the wrapper draggable via the drag handle - each has its own state
   var draggingState = {
     isDragging: false,
     offsetX: 0,
@@ -1894,33 +1910,36 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
       var newY = e.clientY - draggingState.offsetY;
       
       // Keep within viewport bounds
-      newX = Math.max(0, Math.min(newX, window.innerWidth - container.offsetWidth));
-      newY = Math.max(0, Math.min(newY, window.innerHeight - container.offsetHeight));
+      newX = Math.max(0, Math.min(newX, window.innerWidth - wrapper.offsetWidth));
+      newY = Math.max(0, Math.min(newY, window.innerHeight - wrapper.offsetHeight));
       
       // Convert to right positioning for consistency with original
-      var newRight = window.innerWidth - newX - container.offsetWidth;
-      container.style.right = newRight + 'px';
-      container.style.top = newY + 'px';
-      container.style.left = 'auto';
+      var newRight = window.innerWidth - newX - wrapper.offsetWidth;
+      wrapper.style.right = newRight + 'px';
+      wrapper.style.top = newY + 'px';
+      wrapper.style.left = 'auto';
     }
   };
   
   var onMouseUp = function() {
     if (draggingState.isDragging) {
       draggingState.isDragging = false;
-      container.style.zIndex = 100; // Reset z-index
+      wrapper.style.zIndex = 100; // Reset z-index
+      dragHandle.style.opacity = '0.3'; // Reset handle opacity
       // Remove global event listeners to prevent memory leaks
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
   };
   
-  container.addEventListener('mousedown', function(e) {
+  // Only attach drag handlers to the drag handle, not the graph content
+  dragHandle.addEventListener('mousedown', function(e) {
     draggingState.isDragging = true;
-    var rect = container.getBoundingClientRect();
+    var rect = wrapper.getBoundingClientRect();
     draggingState.offsetX = e.clientX - rect.left;
     draggingState.offsetY = e.clientY - rect.top;
-    container.style.zIndex = 1000; // Bring to front when dragging
+    wrapper.style.zIndex = 1000; // Bring to front when dragging
+    dragHandle.style.opacity = '0.7'; // Make handle more visible when dragging
     e.preventDefault();
     
     // Add global event listeners only when dragging starts
@@ -1928,7 +1947,7 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
     document.addEventListener('mouseup', onMouseUp);
   });
   
-  return container;
+  return wrapper;
 }
 
 function stage1Graphs()
