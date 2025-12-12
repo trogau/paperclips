@@ -1861,22 +1861,21 @@ function fixGraphBackground()
  * Create a draggable graph container component
  * @param {string} id - The ID for the graph div
  * @param {string} borderColor - The border color
- * @param {number} initialX - Initial X position (from left)
- * @param {number} initialY - Initial Y position (from top)
+ * @param {number} initialRight - Initial position from right edge
+ * @param {number} initialTop - Initial position from top edge
  * @param {number} width - Width in pixels (default 500)
  * @param {number} height - Height in pixels (default 400)
  * @returns {HTMLElement} - The created draggable graph container
  */
-function createDraggableGraph(id, borderColor, initialX, initialY, width, height) {
+function createDraggableGraph(id, borderColor, initialRight, initialTop, width, height) {
   width = width || 500;
   height = height || 400;
   
   var container = document.createElement('div');
   container.id = id;
-  container.style.cssText = 'position: fixed; left: ' + initialX + 'px; top: ' + initialY + 'px; ' +
+  container.style.cssText = 'position: absolute; right: ' + initialRight + 'px; top: ' + initialTop + 'px; ' +
                             'width: ' + width + 'px; height: ' + height + 'px; ' +
                             'border: solid 2px ' + borderColor + '; ' +
-                            'background: rgba(0, 0, 0, 0.8); ' +
                             'z-index: 100; ' +
                             'cursor: move; ' +
                             'user-select: none;';
@@ -1898,8 +1897,11 @@ function createDraggableGraph(id, borderColor, initialX, initialY, width, height
       newX = Math.max(0, Math.min(newX, window.innerWidth - container.offsetWidth));
       newY = Math.max(0, Math.min(newY, window.innerHeight - container.offsetHeight));
       
-      container.style.left = newX + 'px';
+      // Convert to right positioning for consistency with original
+      var newRight = window.innerWidth - newX - container.offsetWidth;
+      container.style.right = newRight + 'px';
       container.style.top = newY + 'px';
+      container.style.left = 'auto';
     }
   };
   
@@ -1937,18 +1939,18 @@ function stage1Graphs()
 
   return new Promise(function(resolve,reject)
   {
-    // Create draggable graph containers with initial grid layout
+    // Create draggable graph containers with original right-anchored positions
     var graphClipsRate = createDraggableGraph('graphClipsRateDiv', 'green', 10, 110, 500, 400);
     document.body.appendChild(graphClipsRate); 
 
     // INVESTMENT PORTFOLIO
-    var graphInvestments = createDraggableGraph('graphInvestmentsDiv', 'yellow', 520, 110, 500, 400);
+    var graphInvestments = createDraggableGraph('graphInvestmentsDiv', 'yellow', 510, 110, 500, 400);
     document.body.appendChild(graphInvestments); 
 
-    var graphYomi = createDraggableGraph('graphYomiDiv', 'red', 10, 520, 500, 400);
+    var graphYomi = createDraggableGraph('graphYomiDiv', 'red', 10, 510, 500, 400);
     document.body.appendChild(graphYomi); 
 
-    var graphRevenue = createDraggableGraph('graphRevenueDiv', 'blue', 520, 520, 500, 400);
+    var graphRevenue = createDraggableGraph('graphRevenueDiv', 'blue', 510, 510, 500, 400);
     document.body.appendChild(graphRevenue); 
 
     resolve(true);
@@ -1967,14 +1969,14 @@ function stage2Graphs()
     
     return new Promise(function(resolve,reject)
     {
-      // Create draggable graph containers with initial grid layout
+      // Create draggable graph containers with original right-anchored positions
       var graphDrones = createDraggableGraph('graphDronesDiv', 'green', 10, 110, 500, 400);
 	  document.body.appendChild(graphDrones); 
 
-	  var graphMatterRate = createDraggableGraph('graphMatterRateDiv', 'yellow', 520, 110, 500, 400);
+	  var graphMatterRate = createDraggableGraph('graphMatterRateDiv', 'yellow', 510, 110, 500, 400);
       document.body.appendChild(graphMatterRate); 
 
-	  var graphWireRate = createDraggableGraph('graphWireRateDiv', 'red', 10, 520, 500, 400);
+	  var graphWireRate = createDraggableGraph('graphWireRateDiv', 'red', 10, 510, 500, 400);
       document.body.appendChild(graphWireRate); 
 
       resolve(true);
@@ -1989,14 +1991,14 @@ function stage3Graphs()
 
     return new Promise(function(resolve,reject)
     {
-      // Create draggable graph containers with initial grid layout
+      // Create draggable graph containers with original right-anchored positions
       var graphProbes = createDraggableGraph('graphProbesDiv', 'green', 10, 110, 500, 400);
       document.body.appendChild(graphProbes); 
 
-      var graphExploration = createDraggableGraph('graphExplorationDiv', 'yellow', 520, 110, 500, 400);
+      var graphExploration = createDraggableGraph('graphExplorationDiv', 'yellow', 510, 110, 500, 400);
       document.body.appendChild(graphExploration); 
 
-      var graphProbeRates = createDraggableGraph('graphProbeRatesDiv', 'blue', 520, 520, 500, 400);
+      var graphProbeRates = createDraggableGraph('graphProbeRatesDiv', 'blue', 510, 510, 500, 400);
       document.body.appendChild(graphProbeRates); 
 
       resolve(true);
