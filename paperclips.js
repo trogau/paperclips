@@ -92,7 +92,7 @@ var pricer = setInterval(function() {
 
 	if (unsoldClips == 0)
 	{
-		console.log ("No rise");
+		println("No rise");
 		return;
 	}
 
@@ -104,19 +104,19 @@ var pricer = setInterval(function() {
 
 	if ( unsoldClips  < (clipRate * 10) )
 	{
-		console.log("[PRICER] price raise: "  + (unsoldClips) + " vs " + clipRate*10);
+		println("[PRICER] price raise: "  + (unsoldClips) + " vs " + clipRate*10);
 		raisePrice();
 	}
 	else
 	{
 		if (avgSales > clipRate)
 		{
-			console.log("[PRICER] avg sales > cliprate");
+			println("[PRICER] avg sales > cliprate");
 			return;
 		}
 		else
 		{
-			console.log("[PRICER] price lower: "  + (unsoldClips) + " vs " + clipRate*10);
+			println("[PRICER] price lower: "  + (unsoldClips) + " vs " + clipRate*10);
 			lowerPrice();
 		}
 	}
@@ -215,7 +215,7 @@ var investor = setInterval(function() {
 			}
 		}
 
-		console.log("Checking " + projectBuy.id);
+		println("Checking " + projectBuy.id);
 
 
 
@@ -2470,3 +2470,148 @@ function clearDivSafe(div)
 		console.log("Tried to remove div but it didn't exist: " + div);
 	}
 }
+
+/**
+ * CONTROL PANEL
+ * A UI component for managing configuration options
+ */
+(function() {
+	// Configuration metadata: variable name, display label, default value
+	var configOptions = [
+		{ varName: 'cfg_disablePrints', label: 'Disable Prints', defaultValue: false },
+		{ varName: 'cfg_disableClicker', label: 'Disable Clicker', defaultValue: true },
+		{ varName: 'cfg_disablePricer', label: 'Disable Pricer', defaultValue: true },
+		{ varName: 'cfg_disableInvestor', label: 'Disable Investor', defaultValue: true },
+		{ varName: 'cfg_disableManageComputational', label: 'Disable Manage Computational', defaultValue: false },
+		{ varName: 'cfg_disableImproveInvestments', label: 'Disable Improve Investments', defaultValue: false },
+		{ varName: 'cfg_disableModeling', label: 'Disable Modeling', defaultValue: false },
+		{ varName: 'cfg_disableDroneManager', label: 'Disable Drone Manager', defaultValue: true },
+		{ varName: 'cfg_disableProbeLauncher', label: 'Disable Probe Launcher', defaultValue: true },
+		{ varName: 'cfg_disableProbesManager', label: 'Disable Probes Manager', defaultValue: true }
+	];
+
+	function createControlPanel() {
+		// Remove existing panel if any
+		var existingPanel = document.getElementById('automationControlPanel');
+		if (existingPanel) {
+			existingPanel.remove();
+		}
+
+		// Create main panel container
+		var panel = document.createElement('div');
+		panel.id = 'automationControlPanel';
+		panel.style.cssText = 'position: fixed; top: 10px; right: 10px; width: 300px; background: #1a1a1a; border: 2px solid #4a4a4a; border-radius: 5px; font-family: Arial, sans-serif; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.3);';
+
+		// Create title bar
+		var titleBar = document.createElement('div');
+		titleBar.style.cssText = 'background: #2a2a2a; padding: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 3px 3px 0 0; user-select: none;';
+		
+		var title = document.createElement('span');
+		title.textContent = 'Control Panel';
+		title.style.cssText = 'color: #ffffff; font-weight: bold; font-size: 14px;';
+		
+		var arrow = document.createElement('span');
+		arrow.textContent = '▼';
+		arrow.id = 'controlPanelArrow';
+		arrow.style.cssText = 'color: #ffffff; font-size: 12px; transition: transform 0.3s;';
+		
+		titleBar.appendChild(title);
+		titleBar.appendChild(arrow);
+		panel.appendChild(titleBar);
+
+		// Create content container
+		var content = document.createElement('div');
+		content.id = 'controlPanelContent';
+		content.style.cssText = 'padding: 10px; max-height: 400px; overflow-y: auto;';
+
+		// Create toggle for each config option
+		configOptions.forEach(function(option) {
+			var row = document.createElement('div');
+			row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #3a3a3a;';
+
+			var label = document.createElement('label');
+			label.textContent = option.label;
+			label.style.cssText = 'color: #cccccc; font-size: 12px; flex: 1;';
+			label.setAttribute('for', option.varName + '_toggle');
+
+			// Create toggle switch
+			var toggleContainer = document.createElement('div');
+			toggleContainer.style.cssText = 'position: relative; width: 44px; height: 24px;';
+
+			var checkbox = document.createElement('input');
+			checkbox.type = 'checkbox';
+			checkbox.id = option.varName + '_toggle';
+			checkbox.checked = window[option.varName] === true;
+			checkbox.style.cssText = 'opacity: 0; width: 0; height: 0;';
+			
+			var slider = document.createElement('span');
+			slider.style.cssText = 'position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: 24px; transition: 0.3s;';
+			
+			var knob = document.createElement('span');
+			knob.style.cssText = 'position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;';
+			slider.appendChild(knob);
+
+			// Update slider appearance based on checkbox state
+			function updateSlider() {
+				if (checkbox.checked) {
+					slider.style.backgroundColor = '#2196F3';
+					knob.style.transform = 'translateX(20px)';
+				} else {
+					slider.style.backgroundColor = '#555';
+					knob.style.transform = 'translateX(0)';
+				}
+			}
+
+			// Common toggle handler
+			function handleToggle() {
+				window[option.varName] = checkbox.checked;
+				updateSlider();
+				console.log('[CONTROL PANEL] ' + option.label + ' set to: ' + checkbox.checked);
+			}
+
+			updateSlider();
+
+			// Handle checkbox change
+			checkbox.addEventListener('change', handleToggle);
+
+			// Allow clicking on slider to toggle
+			slider.addEventListener('click', function() {
+				checkbox.checked = !checkbox.checked;
+				handleToggle();
+			});
+
+			toggleContainer.appendChild(checkbox);
+			toggleContainer.appendChild(slider);
+
+			row.appendChild(label);
+			row.appendChild(toggleContainer);
+			content.appendChild(row);
+		});
+
+		panel.appendChild(content);
+
+		// Add collapse/expand functionality
+		var isCollapsed = false;
+		titleBar.addEventListener('click', function() {
+			isCollapsed = !isCollapsed;
+			if (isCollapsed) {
+				content.style.display = 'none';
+				arrow.style.transform = 'rotate(-90deg)';
+			} else {
+				content.style.display = 'block';
+				arrow.style.transform = 'rotate(0deg)';
+			}
+		});
+
+		// Add panel to page
+		document.body.appendChild(panel);
+		console.log('[CONTROL PANEL] Control panel initialized');
+	}
+
+	// Initialize the control panel when the script loads
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', createControlPanel);
+	} else {
+		createControlPanel();
+	}
+})();
