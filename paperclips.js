@@ -1881,23 +1881,18 @@ function createDraggableGraph(id, borderColor, initialX, initialY, width, height
                             'cursor: move; ' +
                             'user-select: none;';
   
-  // Make the container draggable
-  var isDragging = false;
-  var offsetX = 0;
-  var offsetY = 0;
+  // Make the container draggable - each container has its own state
+  var draggingState = {
+    isDragging: false,
+    offsetX: 0,
+    offsetY: 0
+  };
   
-  container.addEventListener('mousedown', function(e) {
-    isDragging = true;
-    offsetX = e.clientX - container.offsetLeft;
-    offsetY = e.clientY - container.offsetTop;
-    container.style.zIndex = 1000; // Bring to front when dragging
-    e.preventDefault();
-  });
-  
-  document.addEventListener('mousemove', function(e) {
-    if (isDragging) {
-      var newX = e.clientX - offsetX;
-      var newY = e.clientY - offsetY;
+  // Event handlers that will be added/removed dynamically
+  var onMouseMove = function(e) {
+    if (draggingState.isDragging) {
+      var newX = e.clientX - draggingState.offsetX;
+      var newY = e.clientY - draggingState.offsetY;
       
       // Keep within viewport bounds
       newX = Math.max(0, Math.min(newX, window.innerWidth - container.offsetWidth));
@@ -1906,13 +1901,29 @@ function createDraggableGraph(id, borderColor, initialX, initialY, width, height
       container.style.left = newX + 'px';
       container.style.top = newY + 'px';
     }
-  });
+  };
   
-  document.addEventListener('mouseup', function() {
-    if (isDragging) {
-      isDragging = false;
+  var onMouseUp = function() {
+    if (draggingState.isDragging) {
+      draggingState.isDragging = false;
       container.style.zIndex = 100; // Reset z-index
+      // Remove global event listeners to prevent memory leaks
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
     }
+  };
+  
+  container.addEventListener('mousedown', function(e) {
+    draggingState.isDragging = true;
+    var rect = container.getBoundingClientRect();
+    draggingState.offsetX = e.clientX - rect.left;
+    draggingState.offsetY = e.clientY - rect.top;
+    container.style.zIndex = 1000; // Bring to front when dragging
+    e.preventDefault();
+    
+    // Add global event listeners only when dragging starts
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   });
   
   return container;
