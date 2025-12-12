@@ -92,7 +92,7 @@ var pricer = setInterval(function() {
 
 	if (unsoldClips == 0)
 	{
-		console.log ("No rise");
+		println("No rise");
 		return;
 	}
 
@@ -104,19 +104,19 @@ var pricer = setInterval(function() {
 
 	if ( unsoldClips  < (clipRate * 10) )
 	{
-		console.log("[PRICER] price raise: "  + (unsoldClips) + " vs " + clipRate*10);
+		println("[PRICER] price raise: "  + (unsoldClips) + " vs " + clipRate*10);
 		raisePrice();
 	}
 	else
 	{
 		if (avgSales > clipRate)
 		{
-			console.log("[PRICER] avg sales > cliprate");
+			println("[PRICER] avg sales > cliprate");
 			return;
 		}
 		else
 		{
-			console.log("[PRICER] price lower: "  + (unsoldClips) + " vs " + clipRate*10);
+			println("[PRICER] price lower: "  + (unsoldClips) + " vs " + clipRate*10);
 			lowerPrice();
 		}
 	}
@@ -215,7 +215,7 @@ var investor = setInterval(function() {
 			}
 		}
 
-		console.log("Checking " + projectBuy.id);
+		println("Checking " + projectBuy.id);
 
 
 
