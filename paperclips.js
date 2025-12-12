@@ -1857,6 +1857,67 @@ function fixGraphBackground()
 }
 /** END INIT */
 
+/**
+ * Create a draggable graph container component
+ * @param {string} id - The ID for the graph div
+ * @param {string} borderColor - The border color
+ * @param {number} initialX - Initial X position (from left)
+ * @param {number} initialY - Initial Y position (from top)
+ * @param {number} width - Width in pixels (default 500)
+ * @param {number} height - Height in pixels (default 400)
+ * @returns {HTMLElement} - The created draggable graph container
+ */
+function createDraggableGraph(id, borderColor, initialX, initialY, width, height) {
+  width = width || 500;
+  height = height || 400;
+  
+  var container = document.createElement('div');
+  container.id = id;
+  container.style.cssText = 'position: fixed; left: ' + initialX + 'px; top: ' + initialY + 'px; ' +
+                            'width: ' + width + 'px; height: ' + height + 'px; ' +
+                            'border: solid 2px ' + borderColor + '; ' +
+                            'background: rgba(0, 0, 0, 0.8); ' +
+                            'z-index: 100; ' +
+                            'cursor: move; ' +
+                            'user-select: none;';
+  
+  // Make the container draggable
+  var isDragging = false;
+  var offsetX = 0;
+  var offsetY = 0;
+  
+  container.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    offsetX = e.clientX - container.offsetLeft;
+    offsetY = e.clientY - container.offsetTop;
+    container.style.zIndex = 1000; // Bring to front when dragging
+    e.preventDefault();
+  });
+  
+  document.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+      var newX = e.clientX - offsetX;
+      var newY = e.clientY - offsetY;
+      
+      // Keep within viewport bounds
+      newX = Math.max(0, Math.min(newX, window.innerWidth - container.offsetWidth));
+      newY = Math.max(0, Math.min(newY, window.innerHeight - container.offsetHeight));
+      
+      container.style.left = newX + 'px';
+      container.style.top = newY + 'px';
+    }
+  });
+  
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      container.style.zIndex = 100; // Reset z-index
+    }
+  });
+  
+  return container;
+}
+
 function stage1Graphs()
 {
   console.log("================ DIVS FOR STAGE 1 GRAPHS ================");
@@ -1865,25 +1926,18 @@ function stage1Graphs()
 
   return new Promise(function(resolve,reject)
   {
-    var graphClipsRate = document.createElement('div'); 
-    graphClipsRate.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
-    graphClipsRate.id = "graphClipsRateDiv";
+    // Create draggable graph containers with initial grid layout
+    var graphClipsRate = createDraggableGraph('graphClipsRateDiv', 'green', 10, 110, 500, 400);
     document.body.appendChild(graphClipsRate); 
 
     // INVESTMENT PORTFOLIO
-    var graphInvestments = document.createElement('div'); 
-    graphInvestments.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
-    graphInvestments.id = "graphInvestmentsDiv";
+    var graphInvestments = createDraggableGraph('graphInvestmentsDiv', 'yellow', 520, 110, 500, 400);
     document.body.appendChild(graphInvestments); 
 
-    var graphYomi = document.createElement('div'); 
-    graphYomi.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
-    graphYomi.id = "graphYomiDiv";
+    var graphYomi = createDraggableGraph('graphYomiDiv', 'red', 10, 520, 500, 400);
     document.body.appendChild(graphYomi); 
 
-    var graphRevenue = document.createElement('div'); 
-    graphRevenue.style = "position: absolute;right:510px;top:510px;border: solid 1px blue;width: 500px;height: 400px;"
-    graphRevenue.id = "graphRevenueDiv";
+    var graphRevenue = createDraggableGraph('graphRevenueDiv', 'blue', 520, 520, 500, 400);
     document.body.appendChild(graphRevenue); 
 
     resolve(true);
@@ -1902,19 +1956,14 @@ function stage2Graphs()
     
     return new Promise(function(resolve,reject)
     {
-      var graphDrones = document.createElement('div'); 
-      graphDrones.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
-      graphDrones.id = "graphDronesDiv";
+      // Create draggable graph containers with initial grid layout
+      var graphDrones = createDraggableGraph('graphDronesDiv', 'green', 10, 110, 500, 400);
 	  document.body.appendChild(graphDrones); 
 
-	  var graphMatterRate = document.createElement('div'); 
-      graphMatterRate.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
-      graphMatterRate.id = "graphMatterRateDiv";
+	  var graphMatterRate = createDraggableGraph('graphMatterRateDiv', 'yellow', 520, 110, 500, 400);
       document.body.appendChild(graphMatterRate); 
 
-	  var graphWireRate = document.createElement('div'); 
-      graphWireRate.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
-      graphWireRate.id = "graphWireRateDiv";
+	  var graphWireRate = createDraggableGraph('graphWireRateDiv', 'red', 10, 520, 500, 400);
       document.body.appendChild(graphWireRate); 
 
       resolve(true);
@@ -1929,19 +1978,14 @@ function stage3Graphs()
 
     return new Promise(function(resolve,reject)
     {
-      var graphProbes = document.createElement('div'); 
-      graphProbes.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
-      graphProbes.id = "graphProbesDiv";
+      // Create draggable graph containers with initial grid layout
+      var graphProbes = createDraggableGraph('graphProbesDiv', 'green', 10, 110, 500, 400);
       document.body.appendChild(graphProbes); 
 
-      var graphExploration = document.createElement('div'); 
-      graphExploration.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
-      graphExploration.id = "graphExplorationDiv";
+      var graphExploration = createDraggableGraph('graphExplorationDiv', 'yellow', 520, 110, 500, 400);
       document.body.appendChild(graphExploration); 
 
-      var graphProbeRates = document.createElement('div'); 
-      graphProbeRates.style = "position: absolute;right:510px;top:510px;border: solid 1px blue;width: 500px;height: 400px;"
-      graphProbeRates.id = "graphProbeRatesDiv";
+      var graphProbeRates = createDraggableGraph('graphProbeRatesDiv', 'blue', 520, 520, 500, 400);
       document.body.appendChild(graphProbeRates); 
 
       resolve(true);
