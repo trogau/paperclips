@@ -1887,18 +1887,20 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
                              'display: flex; justify-content: space-between; align-items: center; ' +
                              'padding: 0 5px; box-sizing: border-box;';
   
+  // Create title label for the graph
+  var titleLabel = document.createElement('span');
+  titleLabel.style.cssText = 'color: #ffffff; font-size: 11px; font-weight: normal; ' +
+                             'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+  titleLabel.textContent = ''; // Will be set later when dygraph is created
+  
   // Create minimize toggle button
   var minimizeButton = document.createElement('span');
   minimizeButton.textContent = '▼';
   minimizeButton.style.cssText = 'cursor: pointer; font-size: 12px; color: #ffffff; ' +
-                                 'transition: transform 0.3s; padding: 0 5px;';
+                                 'transition: transform 0.3s; padding: 0 5px; flex-shrink: 0;';
   minimizeButton.title = 'Minimize/Expand';
   
-  // Add spacer to keep button on the right
-  var spacer = document.createElement('span');
-  spacer.style.cssText = 'flex: 1;';
-  
-  dragHandle.appendChild(spacer);
+  dragHandle.appendChild(titleLabel);
   dragHandle.appendChild(minimizeButton);
   
   // Create the actual graph container
@@ -1941,6 +1943,13 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   // Store reference to dygraph instance when it's created
   wrapper.setDygraphInstance = function(instance) {
     dygraphInstance = instance;
+    // Extract and set the title from dygraph options
+    if (instance && instance.getOption) {
+      var title = instance.getOption('title');
+      if (title) {
+        titleLabel.textContent = title;
+      }
+    }
   };
   
   // Minimize/Expand functionality
@@ -2019,6 +2028,7 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   });
   
   // Resizing functionality
+  var resizeTimeout = null;
   var onResizeMove = function(e) {
     if (resizingState.isResizing) {
       var deltaX = e.clientX - resizingState.startX;
@@ -2027,14 +2037,21 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
       var newWidth = Math.max(200, resizingState.startWidth + deltaX);
       var newHeight = Math.max(150, resizingState.startHeight + deltaY);
       
+      // Update container and dragHandle dimensions
       container.style.width = newWidth + 'px';
       container.style.height = newHeight + 'px';
       dragHandle.style.width = newWidth + 'px';
       
-      // Update dygraph if instance exists
-      if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
-        dygraphInstance.resize();
+      // Debounce the resize calls during dragging to improve performance
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
       }
+      resizeTimeout = setTimeout(function() {
+        // Update dygraph if instance exists
+        if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
+          dygraphInstance.resize();
+        }
+      }, 10);
     }
   };
   
@@ -2044,6 +2061,12 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
       resizeHandle.style.opacity = '0.5';
       document.removeEventListener('mousemove', onResizeMove);
       document.removeEventListener('mouseup', onResizeUp);
+      
+      // Clear any pending resize timeout
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = null;
+      }
       
       // Final resize call to ensure graph is properly sized
       if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
