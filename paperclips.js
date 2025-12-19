@@ -2423,13 +2423,14 @@ function graphMatterRate()
 	graphMatterRateInterval = setInterval(function () {
 		var x = new Date();  // current time
 
+		var mtr = 0;
 		if (availableMatter>0) 
 		{
 			var dbsth = 1;
 			if (droneBoost>1){
 				dbsth = droneBoost * Math.floor(harvesterLevel);
 			}	
-			var mtr = powMod*dbsth*Math.floor(harvesterLevel)*harvesterRate;
+			mtr = powMod*dbsth*Math.floor(harvesterLevel)*harvesterRate;
 	
 			mtr = mtr * ((200-sliderPos)/100);
 	
