@@ -2412,6 +2412,7 @@ function graphMatterRate()
 		});
 
 	// Store dygraph instance in the wrapper for resize functionality
+	// Note: variable name 'gDrones' is misleading but was pre-existing
 	var wrapper = document.getElementById("graphMatterRateDiv").parentElement;
 	if (wrapper && wrapper.setDygraphInstance) {
 		wrapper.setDygraphInstance(gDrones);
@@ -2471,6 +2472,7 @@ function graphWireRate()
 		});
 
 	// Store dygraph instance in the wrapper for resize functionality
+	// Note: variable name 'gDrones' is misleading but was pre-existing
 	var wrapper = document.getElementById("graphWireRateDiv").parentElement;
 	if (wrapper && wrapper.setDygraphInstance) {
 		wrapper.setDygraphInstance(gDrones);
