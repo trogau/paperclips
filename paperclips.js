@@ -1891,7 +1891,7 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   var titleLabel = document.createElement('span');
   titleLabel.style.cssText = 'color: #ffffff; font-size: 11px; font-weight: normal; ' +
                              'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-  titleLabel.textContent = ''; // Will be set later when dygraph is created
+  titleLabel.textContent = ''; // Populated from dygraph options when setDygraphInstance is called
   
   // Create minimize toggle button
   var minimizeButton = document.createElement('span');
@@ -2028,9 +2028,9 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   });
   
   // Resizing functionality
-  var resizeTimeout = null;
-  var RESIZE_DEBOUNCE_MS = 16; // ~1 animation frame for smooth updates
-  var RESIZE_FINAL_DELAY_MS = 50; // Allow DOM to settle before final resize
+  let resizeTimeout = null;
+  const RESIZE_DEBOUNCE_MS = 16; // ~1 animation frame for smooth updates
+  const RESIZE_FINAL_DELAY_MS = 50; // Allow DOM to settle before final resize
   
   var onResizeMove = function(e) {
     if (resizingState.isResizing) {
