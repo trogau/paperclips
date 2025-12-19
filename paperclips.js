@@ -2029,6 +2029,9 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   
   // Resizing functionality
   var resizeTimeout = null;
+  var RESIZE_DEBOUNCE_MS = 16; // ~1 animation frame for smooth updates
+  var RESIZE_FINAL_DELAY_MS = 50; // Allow DOM to settle before final resize
+  
   var onResizeMove = function(e) {
     if (resizingState.isResizing) {
       var deltaX = e.clientX - resizingState.startX;
@@ -2051,7 +2054,7 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
         if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
           dygraphInstance.resize();
         }
-      }, 10);
+      }, RESIZE_DEBOUNCE_MS);
     }
   };
   
@@ -2069,10 +2072,11 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
       }
       
       // Final resize call to ensure graph is properly sized
+      // Delay allows DOM to settle and ensures accurate dimension detection
       if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
         setTimeout(function() {
           dygraphInstance.resize();
-        }, 50);
+        }, RESIZE_FINAL_DELAY_MS);
       }
     }
   };
