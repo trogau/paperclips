@@ -1857,6 +1857,99 @@ function fixGraphBackground()
 }
 /** END INIT */
 
+/**
+ * Create a draggable graph container component
+ * @param {string} id - The ID for the graph div
+ * @param {string} borderColor - The border color
+ * @param {number} initialRight - Initial position from right edge
+ * @param {number} initialTop - Initial position from top edge
+ * @param {number} width - Width in pixels (default 500)
+ * @param {number} height - Height in pixels (default 400)
+ * @returns {HTMLElement} - The created draggable graph container
+ */
+function createDraggableGraph(id, borderColor, initialRight, initialTop, width, height) {
+  width = width || 500;
+  height = height || 400;
+  
+  // Create outer wrapper for positioning
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position: absolute; right: ' + initialRight + 'px; top: ' + initialTop + 'px; ' +
+                          'z-index: 100;';
+  
+  // Create drag handle (title bar)
+  var dragHandle = document.createElement('div');
+  dragHandle.style.cssText = 'width: ' + width + 'px; height: 20px; ' +
+                             'background: ' + borderColor + '; ' +
+                             'cursor: move; ' +
+                             'user-select: none; ' +
+                             'opacity: 0.3; ' +
+                             'border: solid 1px ' + borderColor + ';';
+  
+  // Create the actual graph container
+  var container = document.createElement('div');
+  container.id = id;
+  container.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; ' +
+                            'border: solid 2px ' + borderColor + '; ' +
+                            'border-top: none;';
+  
+  // Assemble the structure
+  wrapper.appendChild(dragHandle);
+  wrapper.appendChild(container);
+  
+  // Make the wrapper draggable via the drag handle - each has its own state
+  var draggingState = {
+    isDragging: false,
+    offsetX: 0,
+    offsetY: 0
+  };
+  
+  // Event handlers that will be added/removed dynamically
+  var onMouseMove = function(e) {
+    if (draggingState.isDragging) {
+      var newX = e.clientX - draggingState.offsetX;
+      var newY = e.clientY - draggingState.offsetY;
+      
+      // Keep within viewport bounds
+      newX = Math.max(0, Math.min(newX, window.innerWidth - wrapper.offsetWidth));
+      newY = Math.max(0, Math.min(newY, window.innerHeight - wrapper.offsetHeight));
+      
+      // Convert to right positioning for consistency with original
+      var newRight = window.innerWidth - newX - wrapper.offsetWidth;
+      wrapper.style.right = newRight + 'px';
+      wrapper.style.top = newY + 'px';
+      wrapper.style.left = 'auto';
+    }
+  };
+  
+  var onMouseUp = function() {
+    if (draggingState.isDragging) {
+      draggingState.isDragging = false;
+      wrapper.style.zIndex = 100; // Reset z-index
+      dragHandle.style.opacity = '0.3'; // Reset handle opacity
+      // Remove global event listeners to prevent memory leaks
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+  };
+  
+  // Only attach drag handlers to the drag handle, not the graph content
+  dragHandle.addEventListener('mousedown', function(e) {
+    draggingState.isDragging = true;
+    var rect = wrapper.getBoundingClientRect();
+    draggingState.offsetX = e.clientX - rect.left;
+    draggingState.offsetY = e.clientY - rect.top;
+    wrapper.style.zIndex = 1000; // Bring to front when dragging
+    dragHandle.style.opacity = '0.7'; // Make handle more visible when dragging
+    e.preventDefault();
+    
+    // Add global event listeners only when dragging starts
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+  
+  return wrapper;
+}
+
 function stage1Graphs()
 {
   console.log("================ DIVS FOR STAGE 1 GRAPHS ================");
@@ -1865,25 +1958,18 @@ function stage1Graphs()
 
   return new Promise(function(resolve,reject)
   {
-    var graphClipsRate = document.createElement('div'); 
-    graphClipsRate.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
-    graphClipsRate.id = "graphClipsRateDiv";
+    // Create draggable graph containers with original right-anchored positions
+    var graphClipsRate = createDraggableGraph('graphClipsRateDiv', 'green', 10, 110, 500, 400);
     document.body.appendChild(graphClipsRate); 
 
     // INVESTMENT PORTFOLIO
-    var graphInvestments = document.createElement('div'); 
-    graphInvestments.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
-    graphInvestments.id = "graphInvestmentsDiv";
+    var graphInvestments = createDraggableGraph('graphInvestmentsDiv', 'yellow', 510, 110, 500, 400);
     document.body.appendChild(graphInvestments); 
 
-    var graphYomi = document.createElement('div'); 
-    graphYomi.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
-    graphYomi.id = "graphYomiDiv";
+    var graphYomi = createDraggableGraph('graphYomiDiv', 'red', 10, 510, 500, 400);
     document.body.appendChild(graphYomi); 
 
-    var graphRevenue = document.createElement('div'); 
-    graphRevenue.style = "position: absolute;right:510px;top:510px;border: solid 1px blue;width: 500px;height: 400px;"
-    graphRevenue.id = "graphRevenueDiv";
+    var graphRevenue = createDraggableGraph('graphRevenueDiv', 'blue', 510, 510, 500, 400);
     document.body.appendChild(graphRevenue); 
 
     resolve(true);
@@ -1902,19 +1988,14 @@ function stage2Graphs()
     
     return new Promise(function(resolve,reject)
     {
-      var graphDrones = document.createElement('div'); 
-      graphDrones.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
-      graphDrones.id = "graphDronesDiv";
+      // Create draggable graph containers with original right-anchored positions
+      var graphDrones = createDraggableGraph('graphDronesDiv', 'green', 10, 110, 500, 400);
 	  document.body.appendChild(graphDrones); 
 
-	  var graphMatterRate = document.createElement('div'); 
-      graphMatterRate.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
-      graphMatterRate.id = "graphMatterRateDiv";
+	  var graphMatterRate = createDraggableGraph('graphMatterRateDiv', 'yellow', 510, 110, 500, 400);
       document.body.appendChild(graphMatterRate); 
 
-	  var graphWireRate = document.createElement('div'); 
-      graphWireRate.style = "position: absolute;right:10px;top:510px;border: solid 1px red;width: 500px;height: 400px;"
-      graphWireRate.id = "graphWireRateDiv";
+	  var graphWireRate = createDraggableGraph('graphWireRateDiv', 'red', 10, 510, 500, 400);
       document.body.appendChild(graphWireRate); 
 
       resolve(true);
@@ -1929,19 +2010,14 @@ function stage3Graphs()
 
     return new Promise(function(resolve,reject)
     {
-      var graphProbes = document.createElement('div'); 
-      graphProbes.style = "position: absolute;right:10px;top:110px;border: solid 1px green;width: 500px;height: 400px;"
-      graphProbes.id = "graphProbesDiv";
+      // Create draggable graph containers with original right-anchored positions
+      var graphProbes = createDraggableGraph('graphProbesDiv', 'green', 10, 110, 500, 400);
       document.body.appendChild(graphProbes); 
 
-      var graphExploration = document.createElement('div'); 
-      graphExploration.style = "position: absolute;right:510px;top:110px;border: solid 2px yellow;width: 500px;height: 400px;"
-      graphExploration.id = "graphExplorationDiv";
+      var graphExploration = createDraggableGraph('graphExplorationDiv', 'yellow', 510, 110, 500, 400);
       document.body.appendChild(graphExploration); 
 
-      var graphProbeRates = document.createElement('div'); 
-      graphProbeRates.style = "position: absolute;right:510px;top:510px;border: solid 1px blue;width: 500px;height: 400px;"
-      graphProbeRates.id = "graphProbeRatesDiv";
+      var graphProbeRates = createDraggableGraph('graphProbeRatesDiv', 'blue', 510, 510, 500, 400);
       document.body.appendChild(graphProbeRates); 
 
       resolve(true);
