@@ -1874,16 +1874,32 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   // Create outer wrapper for positioning
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'position: absolute; right: ' + initialRight + 'px; top: ' + initialTop + 'px; ' +
-                          'z-index: 100;';
+                          'z-index: 100; resize: both; overflow: hidden;';
   
-  // Create drag handle (title bar)
+  // Create drag handle (title bar) with minimize button
   var dragHandle = document.createElement('div');
   dragHandle.style.cssText = 'width: ' + width + 'px; height: 20px; ' +
                              'background: ' + borderColor + '; ' +
                              'cursor: move; ' +
                              'user-select: none; ' +
                              'opacity: 0.3; ' +
-                             'border: solid 1px ' + borderColor + ';';
+                             'border: solid 1px ' + borderColor + '; ' +
+                             'display: flex; justify-content: space-between; align-items: center; ' +
+                             'padding: 0 5px; box-sizing: border-box;';
+  
+  // Create minimize toggle button
+  var minimizeButton = document.createElement('span');
+  minimizeButton.textContent = '▼';
+  minimizeButton.style.cssText = 'cursor: pointer; font-size: 12px; color: #ffffff; ' +
+                                 'transition: transform 0.3s; padding: 0 5px;';
+  minimizeButton.title = 'Minimize/Expand';
+  
+  // Add spacer to keep button on the right
+  var spacer = document.createElement('span');
+  spacer.style.cssText = 'flex: 1;';
+  
+  dragHandle.appendChild(spacer);
+  dragHandle.appendChild(minimizeButton);
   
   // Create the actual graph container
   var container = document.createElement('div');
@@ -1892,18 +1908,68 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
                             'border: solid 2px ' + borderColor + '; ' +
                             'border-top: none;';
   
+  // Create resize handle
+  var resizeHandle = document.createElement('div');
+  resizeHandle.style.cssText = 'position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; ' +
+                               'cursor: nwse-resize; background: ' + borderColor + '; ' +
+                               'opacity: 0.5; z-index: 10;';
+  
   // Assemble the structure
   wrapper.appendChild(dragHandle);
   wrapper.appendChild(container);
+  wrapper.appendChild(resizeHandle);
   
-  // Make the wrapper draggable via the drag handle - each has its own state
+  // State management
   var draggingState = {
     isDragging: false,
     offsetX: 0,
     offsetY: 0
   };
   
-  // Event handlers that will be added/removed dynamically
+  var resizingState = {
+    isResizing: false,
+    startX: 0,
+    startY: 0,
+    startWidth: 0,
+    startHeight: 0
+  };
+  
+  var isMinimized = false;
+  var savedHeight = height;
+  var dygraphInstance = null;
+  
+  // Store reference to dygraph instance when it's created
+  wrapper.setDygraphInstance = function(instance) {
+    dygraphInstance = instance;
+  };
+  
+  // Minimize/Expand functionality
+  minimizeButton.addEventListener('click', function(e) {
+    e.stopPropagation();
+    isMinimized = !isMinimized;
+    
+    if (isMinimized) {
+      savedHeight = container.offsetHeight;
+      container.style.display = 'none';
+      resizeHandle.style.display = 'none';
+      minimizeButton.style.transform = 'rotate(-90deg)';
+      minimizeButton.textContent = '▶';
+    } else {
+      container.style.display = 'block';
+      resizeHandle.style.display = 'block';
+      minimizeButton.style.transform = 'rotate(0deg)';
+      minimizeButton.textContent = '▼';
+      
+      // Trigger resize on dygraph if instance exists
+      if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
+        setTimeout(function() {
+          dygraphInstance.resize();
+        }, 50);
+      }
+    }
+  });
+  
+  // Dragging functionality
   var onMouseMove = function(e) {
     if (draggingState.isDragging) {
       var newX = e.clientX - draggingState.offsetX;
@@ -1932,8 +1998,13 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
     }
   };
   
-  // Only attach drag handlers to the drag handle, not the graph content
+  // Only attach drag handlers to the drag handle, not the minimize button
   dragHandle.addEventListener('mousedown', function(e) {
+    // Don't start dragging if clicking on minimize button
+    if (e.target === minimizeButton) {
+      return;
+    }
+    
     draggingState.isDragging = true;
     var rect = wrapper.getBoundingClientRect();
     draggingState.offsetX = e.clientX - rect.left;
@@ -1945,6 +2016,56 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
     // Add global event listeners only when dragging starts
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+  });
+  
+  // Resizing functionality
+  var onResizeMove = function(e) {
+    if (resizingState.isResizing) {
+      var deltaX = e.clientX - resizingState.startX;
+      var deltaY = e.clientY - resizingState.startY;
+      
+      var newWidth = Math.max(200, resizingState.startWidth + deltaX);
+      var newHeight = Math.max(150, resizingState.startHeight + deltaY);
+      
+      container.style.width = newWidth + 'px';
+      container.style.height = newHeight + 'px';
+      dragHandle.style.width = newWidth + 'px';
+      
+      // Update dygraph if instance exists
+      if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
+        dygraphInstance.resize();
+      }
+    }
+  };
+  
+  var onResizeUp = function() {
+    if (resizingState.isResizing) {
+      resizingState.isResizing = false;
+      resizeHandle.style.opacity = '0.5';
+      document.removeEventListener('mousemove', onResizeMove);
+      document.removeEventListener('mouseup', onResizeUp);
+      
+      // Final resize call to ensure graph is properly sized
+      if (dygraphInstance && typeof dygraphInstance.resize === 'function') {
+        setTimeout(function() {
+          dygraphInstance.resize();
+        }, 50);
+      }
+    }
+  };
+  
+  resizeHandle.addEventListener('mousedown', function(e) {
+    resizingState.isResizing = true;
+    resizingState.startX = e.clientX;
+    resizingState.startY = e.clientY;
+    resizingState.startWidth = container.offsetWidth;
+    resizingState.startHeight = container.offsetHeight;
+    resizeHandle.style.opacity = '0.8';
+    e.preventDefault();
+    e.stopPropagation();
+    
+    document.addEventListener('mousemove', onResizeMove);
+    document.addEventListener('mouseup', onResizeUp);
   });
   
   return wrapper;
@@ -2052,6 +2173,12 @@ function graphClipRates()
           }
       });
 
+  // Store dygraph instance in the wrapper for resize functionality
+  var wrapper = document.getElementById("graphClipsRateDiv").parentElement;
+  if (wrapper && wrapper.setDygraphInstance) {
+    wrapper.setDygraphInstance(g);
+  }
+
   var lastClips = clips;
   var lastWire = wire;
 
@@ -2097,6 +2224,12 @@ function graphInvestments()
             rollPeriod: 1,
             labels: ['Time', 'Portfolio', 'Securities', 'Bankroll']
         });
+
+    // Store dygraph instance in the wrapper for resize functionality
+    var wrapper = document.getElementById("graphInvestmentsDiv").parentElement;
+    if (wrapper && wrapper.setDygraphInstance) {
+      wrapper.setDygraphInstance(gInvestments);
+    }
 
     var lastPortfolio = portTotal;
     var lastSecurities = secTotal;
@@ -2145,6 +2278,12 @@ function graphYomi()
             valueRange: [0.0],
         });
 
+    // Store dygraph instance in the wrapper for resize functionality
+    var wrapper = document.getElementById("graphYomiDiv").parentElement;
+    if (wrapper && wrapper.setDygraphInstance) {
+      wrapper.setDygraphInstance(gYomi);
+    }
+
     var lastYomi = yomi;
 
     graphYomiInterval = setInterval(function () {
@@ -2186,6 +2325,12 @@ function graphRevenue()
             valueRange: [0.0],
         });
 
+    // Store dygraph instance in the wrapper for resize functionality
+    var wrapper = document.getElementById("graphRevenueDiv").parentElement;
+    if (wrapper && wrapper.setDygraphInstance) {
+      wrapper.setDygraphInstance(graphRevenue);
+    }
+
     var lastYomi = yomi;
 
     graphRevenueInterval = setInterval(function () {
@@ -2219,6 +2364,12 @@ function graphDrones()
           rollPeriod: 1,
           labels: ['Time', 'ClipRate']
       });
+
+  // Store dygraph instance in the wrapper for resize functionality
+  var wrapper = document.getElementById("graphDronesDiv").parentElement;
+  if (wrapper && wrapper.setDygraphInstance) {
+    wrapper.setDygraphInstance(gDrones);
+  }
 
   var lastClips = clips;
 
@@ -2259,6 +2410,12 @@ function graphMatterRate()
 			rollPeriod: 1,
 			labels: ['Time', 'MatterRate']
 		});
+
+	// Store dygraph instance in the wrapper for resize functionality
+	var wrapper = document.getElementById("graphMatterRateDiv").parentElement;
+	if (wrapper && wrapper.setDygraphInstance) {
+		wrapper.setDygraphInstance(gDrones);
+	}
 
 	var lastClips = clips;
   
@@ -2312,6 +2469,12 @@ function graphWireRate()
 			rollPeriod: 1,
 			labels: ['Time', 'WireRate']
 		});
+
+	// Store dygraph instance in the wrapper for resize functionality
+	var wrapper = document.getElementById("graphWireRateDiv").parentElement;
+	if (wrapper && wrapper.setDygraphInstance) {
+		wrapper.setDygraphInstance(gDrones);
+	}
 
 	graphWireRateInterval = setInterval(function () {
 		var x = new Date();  // current time
@@ -2371,6 +2534,12 @@ function graphExploration()
           labels: ['Time', 'ExploredRate']
       });
 
+  // Store dygraph instance in the wrapper for resize functionality
+  var wrapper = document.getElementById("graphExplorationDiv").parentElement;
+  if (wrapper && wrapper.setDygraphInstance) {
+    wrapper.setDygraphInstance(gExplored);
+  }
+
   var lastPercentFound = (100/(totalMatter/foundMatter));
 
   graphExplorationInterval = setInterval(function () {
@@ -2409,6 +2578,13 @@ function graphProbes()
             rollPeriod: 1,
             labels: ['Time', 'HazardLosses', 'CombatLosses', 'DriftLosses', 'TotalProbes']
         });
+
+    // Store dygraph instance in the wrapper for resize functionality
+    var wrapper = document.getElementById("graphProbesDiv").parentElement;
+    if (wrapper && wrapper.setDygraphInstance) {
+      wrapper.setDygraphInstance(gProbes);
+    }
+
     // It sucks that these things aren't objects, and we need to store state in window.
     graphProbesInt = setInterval(function () {
         var x = new Date();  // current time
@@ -2440,6 +2616,12 @@ function graphProbeRates()
             rollPeriod: 1,
             labels: ['Time', 'ProbeRate', 'HazardRate', 'CombatRate']
         });
+
+    // Store dygraph instance in the wrapper for resize functionality
+    var wrapper = document.getElementById("graphProbeRatesDiv").parentElement;
+    if (wrapper && wrapper.setDygraphInstance) {
+      wrapper.setDygraphInstance(gProbeRates);
+    }
 
     var lastHazards = probesLostHaz;
     var lastCombat = probesLostCombat;
