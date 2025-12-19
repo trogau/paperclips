@@ -1874,7 +1874,7 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
   // Create outer wrapper for positioning
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'position: absolute; right: ' + initialRight + 'px; top: ' + initialTop + 'px; ' +
-                          'z-index: 100; resize: both; overflow: hidden;';
+                          'z-index: 100;';
   
   // Create drag handle (title bar) with minimize button
   var dragHandle = document.createElement('div');
@@ -2503,7 +2503,7 @@ function graphWireRate()
 
 		wireRate = a;
 	
-		console.log("[GRAPH] wireRate is " + wireRate);
+		//console.log("[GRAPH] wireRate is " + wireRate);
 
 		gdrdata.push([x, wireRate]);
 		if (gdrdata.length > 100) {
