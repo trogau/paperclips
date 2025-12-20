@@ -1933,7 +1933,8 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
     startX: 0,
     startY: 0,
     startWidth: 0,
-    startHeight: 0
+    startHeight: 0,
+    startRight: 0
   };
   
   var isMinimized = false;
@@ -2040,10 +2041,18 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
       var newWidth = Math.max(200, resizingState.startWidth + deltaX);
       var newHeight = Math.max(150, resizingState.startHeight + deltaY);
       
+      // Calculate actual delta from constrained width (in case we hit minimum)
+      var actualDeltaX = newWidth - resizingState.startWidth;
+      
       // Update container and dragHandle dimensions
       container.style.width = newWidth + 'px';
       container.style.height = newHeight + 'px';
       dragHandle.style.width = newWidth + 'px';
+      
+      // Adjust wrapper's right position to keep left edge fixed
+      // When width increases, decrease right value by the same amount
+      var newRight = resizingState.startRight - actualDeltaX;
+      wrapper.style.right = newRight + 'px';
       
       // Debounce the resize calls during dragging to improve performance
       if (resizeTimeout) {
@@ -2087,6 +2096,12 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
     resizingState.startY = e.clientY;
     resizingState.startWidth = container.offsetWidth;
     resizingState.startHeight = container.offsetHeight;
+    
+    // Store initial right position to adjust during resize
+    // This keeps the left edge fixed while resizing from bottom-right
+    var computedStyle = window.getComputedStyle(wrapper);
+    resizingState.startRight = parseInt(computedStyle.right) || 0;
+    
     resizeHandle.style.opacity = '0.8';
     e.preventDefault();
     e.stopPropagation();
