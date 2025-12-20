@@ -2100,7 +2100,9 @@ function createDraggableGraph(id, borderColor, initialRight, initialTop, width, 
     // Store initial right position to adjust during resize
     // This keeps the left edge fixed while resizing from bottom-right
     var computedStyle = window.getComputedStyle(wrapper);
-    resizingState.startRight = parseInt(computedStyle.right) || 0;
+    var rightValue = computedStyle.right;
+    // Parse numeric value, handling 'auto' or non-numeric cases
+    resizingState.startRight = (rightValue && rightValue !== 'auto') ? parseFloat(rightValue) : 0;
     
     resizeHandle.style.opacity = '0.8';
     e.preventDefault();
