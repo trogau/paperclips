@@ -1,0 +1,4 @@
+# Test files
+test_graphs.html
+
+# Documentation files are intentionally NOT ignored - they should be committed
